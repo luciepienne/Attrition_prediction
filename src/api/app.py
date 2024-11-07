@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
-import joblib
+import pickle
 
 # Constants
 SECRET_KEY = "your-secret-key"  # Change this!
@@ -25,10 +25,17 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 # Load models
-KNN_MODEL = joblib.load('models/knn_model.joblib')
-RF_MODEL = joblib.load('models/random_forest_model.joblib')
-XGB_MODEL = joblib.load('models/xgboost_model.joblib')
-LR_MODEL = joblib.load('models/linear_regression_model.joblib')
+with open('models/knn_model.pkl', 'rb') as f:
+    KNN_MODEL = pickle.load(f)
+
+with open('models/random_forest_model.pkl', 'rb') as f:
+    RF_MODEL = pickle.load(f)
+
+with open('models/xgboost_model.pkl', 'rb') as f:
+    XGB_MODEL = pickle.load(f)
+
+with open('models/linear_regression_model.pkl', 'rb') as f:
+    LR_MODEL = pickle.load(f)
 
 class Token(BaseModel):
     """
