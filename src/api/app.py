@@ -122,31 +122,31 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
 @app.post("/predict")
 async def predict(input_data: PredictionInput, current_user: User = Depends(get_current_user)):
-    """
-    Make a prediction using the specified model.
-
-    Args:
-        input_data (PredictionInput): Input data for prediction.
-        current_user (User): Current authenticated user.
-
-    Returns:
-        dict: Prediction result.
-
-    Raises:
-        HTTPException: If an invalid model is specified.
-    """
     if input_data.model == 'knn':
-        prediction = KNN_MODEL.predict([input_data.features])
+        prediction = KNN_MODEL.predict_proba([input_data.features])[0]
     elif input_data.model == 'rf':
-        prediction = RF_MODEL.predict([input_data.features])
+        prediction = RF_MODEL.predict_proba([input_data.features])[0]
     elif input_data.model == 'xgb':
-        prediction = XGB_MODEL.predict([input_data.features])
+        prediction = XGB_MODEL.predict_proba([input_data.features])[0]
     elif input_data.model == 'lr':
-        prediction = LR_MODEL.predict([input_data.features])
+        prediction = LR_MODEL.predict_proba([input_data.features])[0]
     else:
         raise HTTPException(status_code=400, detail="Invalid model name")
 
-    return {"prediction": prediction.tolist()}
+    attrition_probability = prediction[1]  # Probabilité de départ
+    
+    if attrition_probability < 0.3:
+        risk_category = "Faible risque de départ"
+    elif attrition_probability < 0.7:
+        risk_category = "Risque moyen de départ"
+    else:
+        risk_category = "Risque élevé de départ"
+
+    return {
+        "attrition_probability": float(attrition_probability),
+        "risk_category": risk_category,
+        "prediction": "Susceptible de partir" if attrition_probability > 0.5 else "Susceptible de rester"
+    }
 
 if __name__ == "__main__":
     import uvicorn
