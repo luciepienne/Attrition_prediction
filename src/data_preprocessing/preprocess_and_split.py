@@ -114,13 +114,15 @@ def encode_categorical(df):
         df (pd.DataFrame): The input DataFrame.
 
     Returns:
-        pd.DataFrame: The DataFrame with encoded categorical variables.
+        tuple: The DataFrame with encoded categorical variables and the encoding dictionary.
     """
     label_encoder = LabelEncoder()
     categorical_cols = df.select_dtypes(include=['object']).columns
+    encoding_dict = {}
     for col in categorical_cols:
         df[col] = label_encoder.fit_transform(df[col])
-    return df
+        encoding_dict[col] = dict(zip(label_encoder.classes_, label_encoder.transform(label_encoder.classes_)))
+    return df, encoding_dict
 
 def split_data(df, target_column='Attrition'):
     """
@@ -178,7 +180,7 @@ def preprocess_data():
     and applying SMOTE.
 
     Returns:
-        tuple: X_train_resampled, X_test_scaled, y_train_resampled, y_test
+        tuple: X_train_resampled, X_test_scaled, y_train_resampled, y_test, feature_names, feature_types, encoding_dict
     """
     df = load_data()
     print("Data loaded. Shape:", df.shape)
@@ -195,8 +197,12 @@ def preprocess_data():
     df = feature_engineering(df)
     print("Feature engineering completed. Shape:", df.shape)
     
-    df = encode_categorical(df)
+    df, encoding_dict = encode_categorical(df)
     print("Categorical variables encoded.")
+
+    feature_df = df.drop('Attrition', axis=1)
+    feature_names = feature_df.columns.tolist()
+    feature_types = feature_df.dtypes.to_dict()
     
     X_train, X_test, y_train, y_test = split_data(df)
     print("Data split into train and test sets.")
@@ -207,8 +213,11 @@ def preprocess_data():
     X_train_resampled, y_train_resampled = apply_smote(X_train_scaled, y_train)
     print("SMOTE applied to balance classes.")
     
-    return X_train_resampled, X_test_scaled, y_train_resampled, y_test
+    return X_train_resampled, X_test_scaled, y_train_resampled, y_test, feature_names, feature_types, encoding_dict
 
 if __name__ == "__main__":
-    X_train, X_test, y_train, y_test = preprocess_data()
+    X_train, X_test, y_train, y_test, feature_names, feature_types, encoding_dict = preprocess_data()
     print("Preprocessing completed. Data is ready for modeling.")
+    print("Features:", feature_names)
+    print("Feature types:", feature_types)
+    print("Encoding dictionary:", encoding_dict)

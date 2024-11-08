@@ -1,0 +1,102 @@
+{
+  "feature_names": [
+    "Age",
+    "BusinessTravel",
+    "DailyRate",
+    "Department",
+    "DistanceFromHome",
+    "Education",
+    "EducationField",
+    "Gender",
+    "HourlyRate",
+    "JobInvolvement",
+    "JobLevel",
+    "JobRole",
+    "MaritalStatus",
+    "MonthlyIncome",
+    "MonthlyRate",
+    "NumCompaniesWorked",
+    "OverTime",
+    "PercentSalaryHike",
+    "PerformanceRating",
+    "StockOptionLevel",
+    "TrainingTimesLastYear",
+    "YearsWithCurrManager",
+    "WorkExperience",
+    "OverallSatisfaction"
+  ],
+  "feature_types": {
+    "Age": "int64",
+    "BusinessTravel": "int64",
+    "DailyRate": "int64",
+    "Department": "int64",
+    "DistanceFromHome": "float64",
+    "Education": "int64",
+    "EducationField": "int64",
+    "Gender": "int64",
+    "HourlyRate": "int64",
+    "JobInvolvement": "int64",
+    "JobLevel": "float64",
+    "JobRole": "int64",
+    "MaritalStatus": "int64",
+    "MonthlyIncome": "float64",
+    "MonthlyRate": "int64",
+    "NumCompaniesWorked": "float64",
+    "OverTime": "int64",
+    "PercentSalaryHike": "float64",
+    "PerformanceRating": "float64",
+    "StockOptionLevel": "float64",
+    "TrainingTimesLastYear": "float64",
+    "YearsWithCurrManager": "float64",
+    "WorkExperience": "float64",
+    "OverallSatisfaction": "float64"
+  },
+  "encoding_dict": {
+    "Attrition": {
+      "No": 0,
+      "Yes": 1
+    },
+    "BusinessTravel": {
+      "Non-Travel": 0,
+      "Travel_Frequently": 1,
+      "Travel_Rarely": 2
+    },
+    "Department": {
+      "Human Resources": 0,
+      "Research & Development": 1,
+      "Sales": 2
+    },
+    "EducationField": {
+      "Human Resources": 0,
+      "Life Sciences": 1,
+      "Marketing": 2,
+      "Medical": 3,
+      "Other": 4,
+      "Technical Degree": 5
+    },
+    "Gender": {
+      "Female": 0,
+      "Male": 1
+    },
+    "JobRole": {
+      "Healthcare Representative": 0,
+      "Human Resources": 1,
+      "Laboratory Technician": 2,
+      "Manager": 3,
+      "Manufacturing Director": 4,
+      "Research Director": 5,
+      "Research Scientist": 6,
+      "Sales Executive": 7,
+      "Sales Representative": 8
+    },
+    "MaritalStatus": {
+      "Divorced": 0,
+      "Married": 1,
+      "Single": 2
+    },
+    "OverTime": {
+      "No": 0,
+      "Yes": 1
+    }
+  }
+}

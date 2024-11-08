@@ -11,3 +11,10 @@ pylint
 pytest
 black
 isort
+fastapi
+uvicorn
+python-jose[cryptography]
+passlib[bcrypt]
+pickle
+python-multipart
+json
