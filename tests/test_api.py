@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 # Ajouter le chemin du module parent pour l'importation
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.api.app import app  # Assurez-vous que ce chemin est correct
+from src.api.app import app
 
 client = TestClient(app)
 

@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.api.auth import (
+from auth import (
     Token,
     User,
     authenticate_user,
