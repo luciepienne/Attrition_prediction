@@ -5,14 +5,15 @@ It includes functions for loading, cleaning, preprocessing, and splitting the da
 
 import glob
 import warnings
+
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
 from imblearn.over_sampling import SMOTE
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
+
 
 def load_data():
     """
@@ -21,8 +22,9 @@ def load_data():
     Returns:
         pd.DataFrame: The loaded dataset.
     """
-    file_path = glob.glob('**/IBM_data.csv', recursive=True)[0]
+    file_path = glob.glob("**/IBM_data.csv", recursive=True)[0]
     return pd.read_csv(file_path)
+
 
 def clean_data(df):
     """
@@ -34,8 +36,13 @@ def clean_data(df):
     Returns:
         pd.DataFrame: The cleaned DataFrame.
     """
-    df.drop(columns=['EmployeeCount', 'StandardHours', 'Over18', 'EmployeeNumber'], axis=1, inplace=True)
+    df.drop(
+        columns=["EmployeeCount", "StandardHours", "Over18", "EmployeeNumber"],
+        axis=1,
+        inplace=True,
+    )
     return df
+
 
 def handle_outliers(df):
     """
@@ -64,6 +71,7 @@ def handle_outliers(df):
             print(f"Proportion of outliers: {proportion_of_outliers:.2f}%\n")
     return features_with_outliers
 
+
 def handle_skewness(df):
     """
     Handle skewness in numerical features by applying log transformation.
@@ -87,6 +95,7 @@ def handle_skewness(df):
     print("Log transformation applied to right-skewed features.")
     return df, skewed_columns
 
+
 def feature_engineering(df):
     """
     Perform feature engineering by creating new features and dropping redundant ones.
@@ -97,14 +106,38 @@ def feature_engineering(df):
     Returns:
         pd.DataFrame: The DataFrame with engineered features.
     """
-    df['WorkExperience'] = df[['TotalWorkingYears', 'YearsAtCompany', 'YearsInCurrentRole',
-                               'YearsSinceLastPromotion', 'YearsWithCurrManager']].mean(axis=1)
-    df['OverallSatisfaction'] = df[['JobSatisfaction', 'EnvironmentSatisfaction', 
-                                    'RelationshipSatisfaction', 'WorkLifeBalance']].mean(axis=1)
-    df = df.drop(['TotalWorkingYears', 'YearsAtCompany', 'YearsInCurrentRole',
-                  'YearsSinceLastPromotion', 'JobSatisfaction', 'EnvironmentSatisfaction',
-                  'RelationshipSatisfaction', 'WorkLifeBalance'], axis=1)
+    df["WorkExperience"] = df[
+        [
+            "TotalWorkingYears",
+            "YearsAtCompany",
+            "YearsInCurrentRole",
+            "YearsSinceLastPromotion",
+            "YearsWithCurrManager",
+        ]
+    ].mean(axis=1)
+    df["OverallSatisfaction"] = df[
+        [
+            "JobSatisfaction",
+            "EnvironmentSatisfaction",
+            "RelationshipSatisfaction",
+            "WorkLifeBalance",
+        ]
+    ].mean(axis=1)
+    df = df.drop(
+        [
+            "TotalWorkingYears",
+            "YearsAtCompany",
+            "YearsInCurrentRole",
+            "YearsSinceLastPromotion",
+            "JobSatisfaction",
+            "EnvironmentSatisfaction",
+            "RelationshipSatisfaction",
+            "WorkLifeBalance",
+        ],
+        axis=1,
+    )
     return df
+
 
 def encode_categorical(df):
     """
@@ -117,14 +150,17 @@ def encode_categorical(df):
         tuple: The DataFrame with encoded categorical variables and the encoding dictionary.
     """
     label_encoder = LabelEncoder()
-    categorical_cols = df.select_dtypes(include=['object']).columns
+    categorical_cols = df.select_dtypes(include=["object"]).columns
     encoding_dict = {}
     for col in categorical_cols:
         df[col] = label_encoder.fit_transform(df[col])
-        encoding_dict[col] = dict(zip(label_encoder.classes_, label_encoder.transform(label_encoder.classes_)))
+        encoding_dict[col] = dict(
+            zip(label_encoder.classes_, label_encoder.transform(label_encoder.classes_))
+        )
     return df, encoding_dict
 
-def split_data(df, target_column='Attrition'):
+
+def split_data(df, target_column="Attrition"):
     """
     Split the data into features and target, then into train and test sets.
 
@@ -138,6 +174,7 @@ def split_data(df, target_column='Attrition'):
     X = df.drop(target_column, axis=1)
     y = df[target_column]
     return train_test_split(X, y, test_size=0.2, random_state=42)
+
 
 def scale_features(X_train, X_test):
     """
@@ -155,6 +192,7 @@ def scale_features(X_train, X_test):
     X_test_scaled = scaler.transform(X_test)
     return X_train_scaled, X_test_scaled
 
+
 def apply_smote(X_train, y_train):
     """
     Apply SMOTE to balance the classes in the training data.
@@ -170,6 +208,7 @@ def apply_smote(X_train, y_train):
     X_train_resampled, y_train_resampled = smote.fit_resample(X_train, y_train)
     return X_train_resampled, y_train_resampled
 
+
 def preprocess_data():
     """
     Main function to preprocess the data.
@@ -184,39 +223,50 @@ def preprocess_data():
     """
     df = load_data()
     print("Data loaded. Shape:", df.shape)
-    
+
     df = clean_data(df)
     print("Data cleaned. Shape:", df.shape)
-    
+
     features_with_outliers = handle_outliers(df)
     print(f"Features with outliers: {features_with_outliers}")
-    
+
     df, skewed_columns = handle_skewness(df)
     print(f"Skewed columns handled: {skewed_columns}")
-    
+
     df = feature_engineering(df)
     print("Feature engineering completed. Shape:", df.shape)
-    
+
     df, encoding_dict = encode_categorical(df)
     print("Categorical variables encoded.")
 
-    feature_df = df.drop('Attrition', axis=1)
+    feature_df = df.drop("Attrition", axis=1)
     feature_names = feature_df.columns.tolist()
     feature_types = feature_df.dtypes.to_dict()
-    
+
     X_train, X_test, y_train, y_test = split_data(df)
     print("Data split into train and test sets.")
-    
+
     X_train_scaled, X_test_scaled = scale_features(X_train, X_test)
     print("Features scaled.")
-    
+
     X_train_resampled, y_train_resampled = apply_smote(X_train_scaled, y_train)
     print("SMOTE applied to balance classes.")
-    
-    return X_train_resampled, X_test_scaled, y_train_resampled, y_test, feature_names, feature_types, encoding_dict
+
+    return (
+        X_train_resampled,
+        X_test_scaled,
+        y_train_resampled,
+        y_test,
+        feature_names,
+        feature_types,
+        encoding_dict,
+    )
+
 
 if __name__ == "__main__":
-    X_train, X_test, y_train, y_test, feature_names, feature_types, encoding_dict = preprocess_data()
+    X_train, X_test, y_train, y_test, feature_names, feature_types, encoding_dict = (
+        preprocess_data()
+    )
     print("Preprocessing completed. Data is ready for modeling.")
     print("Features:", feature_names)
     print("Feature types:", feature_types)
