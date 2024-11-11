@@ -18,3 +18,4 @@ passlib[bcrypt]
 pickle
 python-multipart
 json
+httpx

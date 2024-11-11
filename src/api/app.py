@@ -5,18 +5,27 @@ features necessary for prediction are integrated.
 """
 
 import json
+import os
 import pickle
-from datetime import datetime, timedelta
-from typing import List
+import sys
+
 
 import numpy as np
 from fastapi import Depends, FastAPI, HTTPException, Query
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from jose import JWTError, jwt
-from passlib.context import CryptContext
+from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.openapi.docs import get_swagger_ui_html
 from pydantic import BaseModel, Field
 
-from auth import Token, User, fake_users_db, create_access_token, authenticate_user, get_current_user
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from src.api.auth import (
+    Token,
+    User,
+    authenticate_user,
+    create_access_token,
+    fake_users_db,
+    get_current_user,
+)
 
 app = FastAPI()
 
@@ -98,6 +107,7 @@ class PredictionOutput(BaseModel):
     model_name: str
     prediction: float
     attrition_risk: str
+
 
 @app.post("/token", response_model=Token)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
@@ -277,6 +287,23 @@ async def predict(
     predictions_output["predictions"].append(predict_model("xg_boost", features_array))
 
     return predictions_output
+
+
+@app.get("/user_info")
+async def get_user_info(current_user: User = Depends(get_current_user)):
+    """
+    Récupère les informations de l'utilisateur actuellement authentifié.
+
+    Cette fonction nécessite une authentification et renvoie simplement le nom d'utilisateur
+    de l'utilisateur actuellement connecté.
+    """
+    return {"username": current_user.username}
+
+
+@app.get("/docs", include_in_schema=False)
+async def get_docs():
+    """Serve the API documentation."""
+    return get_swagger_ui_html(openapi_url=app.openapi_url, title="API docs")
 
 
 if __name__ == "__main__":

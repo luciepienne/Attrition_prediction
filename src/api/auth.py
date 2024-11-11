@@ -1,12 +1,13 @@
-from fastapi import Depends, HTTPException
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from pydantic import BaseModel
 from datetime import datetime, timedelta
+
+from fastapi import Depends, HTTPException
+from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
+from pydantic import BaseModel
 
 # Configuration des constantes
-SECRET_KEY = "password" 
+SECRET_KEY = "password"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -20,21 +21,24 @@ fake_users_db = {
         "username": "admin",
         "full_name": "Admin Master",
         "email": "master@example.com",
-        "hashed_password": pwd_context.hash("admin")
+        "hashed_password": pwd_context.hash("admin"),
     }
 }
+
 
 class Token(BaseModel):
     access_token: str
     token_type: str
 
+
 class User(BaseModel):
     username: str
+
 
 def create_access_token(data: dict) -> str:
     """
     Create a new access token.
-    
+
     Args:
         data (dict): Data to encode in the token.
 
@@ -44,13 +48,14 @@ def create_access_token(data: dict) -> str:
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
-    
+
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
 
 def authenticate_user(fake_db, username: str, password: str):
     """
     Authenticate user against fake database.
-    
+
     Args:
         fake_db (dict): Fake user database.
         username (str): Username to authenticate.
@@ -59,13 +64,14 @@ def authenticate_user(fake_db, username: str, password: str):
     Returns:
         User or False: User object if authentication is successful; False otherwise.
     """
-    
+
     user = fake_db.get(username)
-    
-    if not user or not pwd_context.verify(password, user['hashed_password']):
+
+    if not user or not pwd_context.verify(password, user["hashed_password"]):
         return False
-    
+
     return User(username=username)
+
 
 def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
     """
@@ -80,21 +86,21 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
     Raises:
         HTTPException: If credentials are invalid.
     """
-    
+
     credentials_exception = HTTPException(
         status_code=401,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    
+
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
-        
+
         if username is None:
             raise credentials_exception
-        
+
         return User(username=username)
-    
+
     except JWTError:
         raise credentials_exception
