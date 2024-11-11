@@ -13,6 +13,7 @@ import sys
 import numpy as np
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.openapi.docs import get_swagger_ui_html
 from pydantic import BaseModel, Field
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -297,6 +298,12 @@ async def get_user_info(current_user: User = Depends(get_current_user)):
     de l'utilisateur actuellement connecté.
     """
     return {"username": current_user.username}
+
+
+@app.get("/docs", include_in_schema=False)
+async def get_docs():
+    """Serve the API documentation."""
+    return get_swagger_ui_html(openapi_url=app.openapi_url, title="API docs")
 
 
 if __name__ == "__main__":
