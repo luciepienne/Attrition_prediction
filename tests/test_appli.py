@@ -13,7 +13,7 @@ from src.api.attrition_prediction import get_token
 class MockClient:
     def post(self, url, data=None, headers=None):
         if (
-            url == "http://localhost:8000/token"
+            url == "http://localhost:8001/token"
             and data["username"] == "ADMIN"
             and data["password"] == "admin"
         ):
