@@ -1,10 +1,12 @@
 import json
 import os
-import sys
 import pickle
+import sys
+
 import numpy as np
-from xgboost import XGBClassifier
-from sklearn.metrics import classification_report, accuracy_score, precision_score, recall_score, f1_score
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, classification_report, precision_score, recall_score, f1_score
+
 import mlflow
 import mlflow.sklearn
 from mlflow.models.signature import infer_signature
@@ -13,30 +15,24 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from data_preprocessing.preprocess_and_split import preprocess_data
 
+# Configurez MLflow
 mlflow.set_tracking_uri("http://localhost:5000")  # Ajustez l'URL si nécessaire
-mlflow.set_experiment("XGBoost_Attrition")
+mlflow.set_experiment("Linear_Regression_Attrition")
 
-# Charger et prétraiter les données
-X_train, X_test, y_train, y_test, feature_names, feature_types, encoding_dict = (
-    preprocess_data()
-)
 
-xgb_model = XGBClassifier(
-    objective="binary:logistic",
-    learning_rate=0.1,
-    n_estimators=350,
-    max_depth=3,
-    random_state=42,
-    max_features="sqrt",
-)
+## Charger et prétraiter les données
+X_train, X_test, y_train, y_test, feature_names, feature_types, encoding_dict = preprocess_data()
+
+# Créer un modèle de régression logistique
+lr_model = LogisticRegression()
 
 with mlflow.start_run():
     # Entraîner le modèle
-    xgb_model.fit(X_train, y_train)
+    lr_model.fit(X_train, y_train)
     
     # Faire des prédictions sur les données d'entraînement et de test
-    y_train_predict = xgb_model.predict(X_train)
-    y_test_predict = xgb_model.predict(X_test)
+    y_train_predict = lr_model.predict(X_train)
+    y_test_predict = lr_model.predict(X_test)
 
     # Calculer les métriques
     train_accuracy = accuracy_score(y_train, y_train_predict)
@@ -54,25 +50,33 @@ with mlflow.start_run():
 
     # Enregistrer le rapport de classification comme artefact
     report = classification_report(y_test, y_test_predict)
-    with open("classification_report_xgboost.txt", "w") as f:
+    with open("classification_report.txt", "w") as f:
         f.write(report)
     
-    mlflow.log_artifact("classification_report_xgboost.txt")
+    mlflow.log_artifact("classification_report.txt")
 
+    # Enregistrer le modèle
+    signature = infer_signature(X_train, y_train_predict)
+    mlflow.sklearn.log_model(lr_model, "linear_regression_model", signature=signature)
+
+print("Modèle entraîné et enregistré avec succès.")
+
+# Classification Report
 print(
     "================================================================================================="
 )
-print("Classification Report for XGBoost Model (Train Set):")
+print("Classification Report for Logistic Regression Model (Train Set):")
 print(classification_report(y_train, y_train_predict))
 
 print(
     "================================================================================================="
 )
-print("Classification Report for XGBoost Model (Test Set):")
+print("Classification Report for Logistic Regression Model (Test Set):")
 print(classification_report(y_test, y_test_predict))
 
-with open("models/xgboost_model_mlflow.pkl", "wb") as f:
-    pickle.dump(xgb_model, f)
+with open("models/linear_regression_model_mlflow.pkl", "wb") as f:
+    pickle.dump(lr_model, f)
+print("Models trained and saved successfully.")
 
 # # Sauvegarder les informations sur les features dans un fichier JSON
 # feature_info = {

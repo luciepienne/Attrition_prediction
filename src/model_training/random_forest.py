@@ -1,34 +1,68 @@
 import json
 import os
+import pickle
 import sys
-
 import numpy as np
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, accuracy_score, precision_score, recall_score, f1_score
+import mlflow
+import mlflow.sklearn
+from mlflow.models.signature import infer_signature
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-import pickle
-
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report
-
 from data_preprocessing.preprocess_and_split import preprocess_data
 
 rf_model = RandomForestClassifier(
-    n_estimators=200, max_depth=5, max_features="sqrt", random_state=42
+    n_estimators=100, max_depth=50, max_features="sqrt", random_state=70
 )
 
 # Charger et prétraiter les données
 X_train, X_test, y_train, y_test, feature_names, feature_types, encoding_dict = (
     preprocess_data()
 )
+mlflow.set_tracking_uri("http://localhost:5000")  # Ajustez l'URL si nécessaire
+mlflow.set_experiment("Random_Forest_Attrition")
 
-rf_model.fit(X_train, y_train)
+# Charger et prétraiter les données
+X_train, X_test, y_train, y_test, feature_names, feature_types, encoding_dict = preprocess_data()
 
-y_train_predict = rf_model.predict(X_train)
+# Créer un modèle Random Forest
+rf_model = RandomForestClassifier(n_estimators=200, max_depth=5, max_features="sqrt", random_state=42)
 
-# Make predictions on the test data
+with mlflow.start_run():
+    # Entraîner le modèle
+    rf_model.fit(X_train, y_train)
+    
+    # Faire des prédictions sur les données d'entraînement et de test
+    y_train_predict = rf_model.predict(X_train)
+    y_test_predict = rf_model.predict(X_test)
 
-y_test_predict = rf_model.predict(X_test)
+    # Calculer les métriques
+    train_accuracy = accuracy_score(y_train, y_train_predict)
+    test_accuracy = accuracy_score(y_test, y_test_predict)
+    precision = precision_score(y_test, y_test_predict)
+    recall = recall_score(y_test, y_test_predict)
+    f1 = f1_score(y_test, y_test_predict)
+
+    # Enregistrer les métriques dans MLflow
+    mlflow.log_metric("train_accuracy", train_accuracy)
+    mlflow.log_metric("test_accuracy", test_accuracy)
+    mlflow.log_metric("precision", precision)
+    mlflow.log_metric("recall", recall)
+    mlflow.log_metric("f1_score", f1)
+
+    # Enregistrer le rapport de classification comme artefact
+    report = classification_report(y_test, y_test_predict)
+    with open("classification_report.txt", "w") as f:
+        f.write(report)
+    
+    mlflow.log_artifact("classification_report.txt")
+
+    # Enregistrer le modèle avec signature
+    signature = infer_signature(X_train, y_train_predict)
+    mlflow.sklearn.log_model(rf_model, "random_forest_model", signature=signature)
+
+print("Modèle entraîné et enregistré avec succès.")
 
 # Classification Report for Train Set
 print(
@@ -44,7 +78,7 @@ print(
 print("Classification Report for Random Forest Model (Test Set):")
 print(classification_report(y_test, y_test_predict))
 
-with open("models/random_forest_model.pkl", "wb") as f:
+with open("models/random_forest_model_mlflow.pkl", "wb") as f:
     pickle.dump(rf_model, f)
 print("Models trained and saved successfully.")
 
