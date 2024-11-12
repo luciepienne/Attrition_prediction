@@ -115,6 +115,15 @@ for name, model in models.items():
         best_model_name = name
         best_model = model
 
+best_model_details = {
+    "best_model_name": best_model_name,
+    "test_accuracy": best_accuracy,
+    "hyperparameters": best_model.get_params() 
+}
+
+with open("models/best_model_detail.json", "w") as json_file:
+    json.dump(best_model_details, json_file, indent=2)
+
 # Enregistrer le meilleur modèle localement en pickle
 with open(f"models/best_model_{best_model_name}.pkl", "wb") as f:
     pickle.dump(best_model, f)
@@ -129,4 +138,4 @@ print(
     f"Le meilleur modèle est {best_model_name} avec une précision de {best_accuracy:.4f}."
 )
 
-# Exemple d'utilisation de FastAPI pour faire des prédictions avec le meilleur modèle (à intégrer dans votre application FastAPI)
+

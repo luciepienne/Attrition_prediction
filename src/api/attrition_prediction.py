@@ -134,16 +134,19 @@ def predict_page():
             "OverallSatisfaction": overall_satisfaction,
         }
 
-        predictions = predict_employee_attrition(
-            st.session_state["token"], employee_data
-        )
-        if predictions:
-            for prediction in predictions["predictions"]:
-                prediction_probability_percentage = prediction["prediction"] * 100
-                st.write(
-                    f"Model: {prediction['model_name']}, Prediction Probability: {prediction_probability_percentage:.2f}%, Risk: {prediction['attrition_risk']}"
-                )
+        # Appel à l'API pour obtenir les prédictions
+        predictions = predict_employee_attrition(st.session_state["token"], employee_data)
 
+        # Vérifier si le format de la réponse est correct
+        if predictions and 'best_model_name' in predictions:
+            prediction_probability_percentage = predictions["prediction"] * 100
+            risk_level = predictions["attrition_risk"]
+            
+            # Afficher les résultats
+            st.write(f"Model: {predictions['best_model_name']}, Prediction Probability: {prediction_probability_percentage:.2f}%, Risk: {risk_level}")
+        else:
+            # Gérer le cas où la réponse ne contient pas les données attendues
+            st.error("Error: Invalid response from the prediction API.")
 
 if "page" not in st.session_state:
     st.session_state["page"] = "login"  # Page par défaut

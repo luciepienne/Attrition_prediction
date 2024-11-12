@@ -6,3 +6,4 @@ tmp/
 *.pkl
 mlruns/
 mlartifacts/
+best_model_detail.json
