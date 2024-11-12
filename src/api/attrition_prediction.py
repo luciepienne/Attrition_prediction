@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 
-API_URL = "http://localhost:8000"
+API_URL = "http://localhost:8001"
 
 def get_token(username: str, password: str) -> str:
     """Obtenir un token d'authentification."""
@@ -14,8 +14,8 @@ def get_token(username: str, password: str) -> str:
 
 def predict_employee_attrition(token: str, employee_data: dict) -> dict:
     """Faire une prédiction sur l'attrition des employés."""
-    headers = {"Authorization": f"Bearer {token}"}
-    response = requests.post(f"{API_URL}/predict", headers=headers, params=employee_data)
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+    response = requests.post(f"{API_URL}/predict", headers=headers, json=employee_data)
     if response.status_code == 200:
         return response.json()
     else:

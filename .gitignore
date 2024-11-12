@@ -4,3 +4,4 @@ venv
 tmp/
 *.csv
 *.pkl
+mlruns/
