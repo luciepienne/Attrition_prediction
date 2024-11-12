@@ -6,7 +6,7 @@ Ce projet fournit une API FastAPI pour prédire le risque d'attrition des employ
 
 ## Structure du projet :
 
-`E3_attrition/
+`prediction_attrition/
 │
 ├── data/                          # Dossier pour les données
 │   └── IBM_data.csv               # Kaggle : https://www.kaggle.com/datasets/pavansubhasht/ibm-hr-analytics-attrition-dataset/data
@@ -25,13 +25,20 @@ Ce projet fournit une API FastAPI pour prédire le risque d'attrition des employ
 │   ├── api/                       # Dossier pour l'API FastAPI
 │   │   ├── app.py                 # Application FastAPI principale
 │   │   ├── auth.py                # Gestion de l'authentification
-│   │   └── api_client.py          # Client API pour Streamlit
+│   │   └── api_client.py          # Client API avec Streamlit
 │   │
 │   ├── data_processing/            # Dossier pour le traitement des données
 │   │   └── preprocess_and_split.py # Script de nettoyage des données
 │   │
 │   ├── model_training/            # Dossier pour l'entraînement des modèles
-│   │   └── train_models.py         # Script d'entraînement des modèles
+│   │   ├── knn_model.py               # Script d'entraînement des modèle KNN
+│   │   ├── random_forest_model.py     # Script d'entraînement des modèleRandom Forest
+│   │   ├── linear_regression_model.py # Script d'entraînement des modèle régression linéaire
+│   │   ├── xgboost_model.ppy          # Script d'entraînement des modèle XGBoost
+│   ├── monitoring/
+│   │   ├── prometheus_config.yml
+│   │   ├── grafana_dashboard.json
+│   │   └── mlflow_tracking.py
 │   │
 │   └── utils/                     # Dossier pour les utilitaires
 │       └── helpers.py             # Fonctions utilitaires diverses
