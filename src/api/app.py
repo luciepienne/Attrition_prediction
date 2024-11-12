@@ -14,7 +14,10 @@ import numpy as np
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.openapi.docs import get_swagger_ui_html
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
+from prometheus_client import start_http_server, Summary, Counter
+import mlflow
+from contextlib import asynccontextmanager
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -28,6 +31,21 @@ from auth import (
 )
 
 app = FastAPI()
+
+# Métriques Prometheus
+REQUEST_TIME = Summary('request_processing_seconds', 'Time spent processing request')
+PREDICTION_COUNTER = Counter('prediction_count', 'Number of predictions made', ['model', 'risk_level'])
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    start_http_server(8000)  # Démarrer le serveur Prometheus
+    mlflow.set_tracking_uri("http://localhost:5000")  # Configurer MLflow
+    yield
+    # Shutdown
+
+app = FastAPI(lifespan=lifespan)
+
 
 # Charger les informations sur les features
 with open("models/feature_info.json", "r") as f:
@@ -107,6 +125,8 @@ class PredictionOutput(BaseModel):
     model_name: str
     prediction: float
     attrition_risk: str
+    class Config:
+        protected_namespaces = ()
 
 
 @app.post("/token", response_model=Token)
@@ -132,6 +152,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     access_token = create_access_token(data={"sub": user.username})
 
     return {"access_token": access_token, "token_type": "bearer"}
+
 
 
 def predict_model(model_name: str, features_array):
@@ -176,6 +197,7 @@ def predict_model(model_name: str, features_array):
 
 
 @app.post("/predict", response_model=dict)
+@REQUEST_TIME.time()
 async def predict(
     Gender: str = Query(
         ...,
@@ -285,8 +307,13 @@ async def predict(
         predict_model("linear_regression", features_array)
     )
     predictions_output["predictions"].append(predict_model("xg_boost", features_array))
+    
+    for prediction in predictions_output["predictions"]:
+        PREDICTION_COUNTER.labels(model=prediction.model_name, risk_level=prediction.attrition_risk).inc()
+        mlflow.log_metric(f"{prediction.model_name}_prediction", prediction.prediction)
 
     return predictions_output
+
 
 
 @app.get("/user_info")
@@ -309,4 +336,4 @@ async def get_docs():
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8001)
