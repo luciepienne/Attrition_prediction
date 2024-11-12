@@ -13,11 +13,11 @@ from contextlib import asynccontextmanager
 
 import mlflow
 import numpy as np
-from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.security import OAuth2PasswordRequestForm
 from prometheus_client import Counter, Summary, start_http_server
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -58,18 +58,14 @@ app = FastAPI(lifespan=lifespan)
 with open("models/feature_info.json", "r") as f:
     feature_info = json.load(f)
 
-# Charger tous les modèles
-with open("models/knn_model.pkl", "rb") as f:
-    knn_model = pickle.load(f)
+# Charger le nom du meilleur modèle
+with open("models/best_model_detail.json", "r") as f:
+    best_model_info = json.load(f)
 
-with open("models/random_forest_model.pkl", "rb") as f:
-    rf_model = pickle.load(f)
-
-with open("models/linear_regression_model.pkl", "rb") as f:
-    lr_model = pickle.load(f)
-
-with open("models/xgboost_model.pkl", "rb") as f:
-    xgboost_model = pickle.load(f)
+# Charger le meilleur modèle
+best_model_name = best_model_info["best_model_name"]  # Récupérer le nom du meilleur modèle
+with open(f"models/best_model_{best_model_name}.pkl", "rb") as f:
+    best_model = pickle.load(f)
 
 
 class PredictionInput(BaseModel):
@@ -129,20 +125,10 @@ class PredictionInput(BaseModel):
 
 
 class PredictionOutput(BaseModel):
-    model_name: str
+    """Modèle Pydantic pour la sortie de prédiction."""
+    best_model_name: str
     prediction: float
     attrition_risk: str
-
-    class Config:
-        protected_namespaces = ()
-
-    def dict(self, *args, **kwargs):
-        return {
-            "model_name": self.model_name,
-            "prediction": self.prediction,
-            "attrition_risk": self.attrition_risk,
-        }
-
 
 @app.post("/token", response_model=Token)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
@@ -168,36 +154,23 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
     return {"access_token": access_token, "token_type": "bearer"}
 
+@app.post("/predict", response_model=PredictionOutput)
+async def predict(input_data: PredictionInput):
+    """Faire une prédiction sur l'attrition des employés."""
+    
+    # Convertir les entrées en valeurs numériques selon l'encodage
+    features = []
+    for feature_name in feature_info["feature_names"]:
+        value = getattr(input_data, feature_name)
+        if feature_name in feature_info["encoding_dict"]:
+            value = feature_info["encoding_dict"][feature_name].get(value, value)
+        features.append(float(value))
 
-def predict_model(model_name: str, features_array):
-    """
-    Fonction pour faire la prédiction avec un modèle donné.
+    # Préparer les données pour la prédiction
+    features_array = np.array(features).reshape(1, -1)
 
-    Args:
-        model_name (str): Le nom du modèle à utiliser.
-        features_array (np.array): Les features à utiliser pour la prédiction.
-
-    Returns:
-        PredictionOutput: Un objet contenant le nom du modèle et la prédiction.
-    """
-
-    if model_name == "knn":
-        prediction_proba = knn_model.predict_proba(features_array)[0][1]
-        model_used = "KNN"
-
-    elif model_name == "random_forest":
-        prediction_proba = rf_model.predict_proba(features_array)[0][1]
-        model_used = "Random Forest"
-
-    elif model_name == "linear_regression":
-        prediction_proba = lr_model.predict_proba(features_array)[0][1]
-        model_used = "Linear Regression"
-
-    elif model_name == "xg_boost":
-        prediction_proba = xgboost_model.predict_proba(features_array)[0][1]
-        model_used = "XG BOOST"
-    else:
-        raise ValueError(f"Model {model_name} not supported")
+    # Faire la prédiction avec le meilleur modèle
+    prediction_proba = best_model.predict_proba(features_array)[0][1]  # Assurez-vous que cela correspond à votre modèle
 
     # Interpréter la prédiction
     if prediction_proba < 0.3:
@@ -207,54 +180,15 @@ def predict_model(model_name: str, features_array):
     else:
         risk = "Risque élevé de départ"
 
-    return {
-        "model_name": model_used,
-        "prediction": float(prediction_proba),
-        "attrition_risk": risk,
-    }
+        # Log des métriques avec Prometheus et MLflow
+    PREDICTION_COUNTER.labels(model=best_model_name, risk_level=risk).inc()
+    
+    # Log de la prédiction dans MLflow (assurez-vous que mlflow est configuré)
+    mlflow.log_metric(f"{best_model_name}_prediction", prediction_proba)
 
+    logger.info(f"Prediction output: Model={best_model_name}, Probability={prediction_proba}, Risk Level={risk}")
 
-@app.post("/predict", response_model=dict)
-@REQUEST_TIME.time()
-def predict(
-    input_data: PredictionInput, current_user: User = Depends(get_current_user)
-):
-    # Convertir les entrées en valeurs numériques selon l'encodage
-    features = []
-    for feature_name in feature_info["feature_names"]:
-        value = getattr(input_data, feature_name)
-        if feature_name in feature_info["encoding_dict"]:
-            value = feature_info["encoding_dict"][feature_name].get(value, value)
-        features.append(float(value))
-
-    # Faire la prédiction pour chaque modèle
-    features_array = np.array(features).reshape(1, -1)
-    predictions_output = {"predictions": []}
-
-    # Liste des modèles à utiliser
-    models = ["knn", "random_forest", "linear_regression", "xg_boost"]
-
-    for model_name in models:
-        try:
-            prediction = predict_model(model_name, features_array)
-            predictions_output["predictions"].append(prediction)
-
-        except Exception as e:
-            logger.error(
-                f"Erreur lors de la prédiction avec le modèle {model_name}: {str(e)}"
-            )
-
-    PREDICTION_COUNTER.labels(
-        model=prediction["model_name"], risk_level=prediction["attrition_risk"]
-    ).inc()
-    mlflow.log_metric(
-        f"{prediction['model_name']}_prediction", prediction["prediction"]
-    )
-
-    logger.info(f"Prediction output: {predictions_output}")
-
-    return predictions_output
-
+    return PredictionOutput(best_model_name=best_model_name, prediction=float(prediction_proba), attrition_risk=risk)
 
 @app.get("/user_info")
 async def get_user_info(current_user: User = Depends(get_current_user)):
