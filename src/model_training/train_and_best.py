@@ -7,6 +7,8 @@ import mlflow
 import mlflow.sklearn
 import numpy as np
 from mlflow.models.signature import infer_signature
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     accuracy_score,
     classification_report,
@@ -15,13 +17,13 @@ from sklearn.metrics import (
     recall_score,
 )
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
-from sklearn.linear_model import LogisticRegression
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from data_preprocessing.preprocess_and_split import preprocess_data
 from features_in_json import save_feature_info
+
+from data_preprocessing.preprocess_and_split import preprocess_data
+
 
 def train_and_log_model(model, model_name, X_train, y_train, X_test, y_test):
     mlflow.set_experiment(model_name)  # Créer une expérience par modèle
@@ -66,37 +68,39 @@ def train_and_log_model(model, model_name, X_train, y_train, X_test, y_test):
     print(f"Modèle {model_name} entraîné et enregistré avec succès.")
     return test_accuracy  # Retourner la précision du test
 
+
 # Configuration de MLflow
 mlflow.set_tracking_uri("http://localhost:5000")
 
 # Charger et prétraiter les données
-X_train, X_test, y_train, y_test, feature_names, feature_types, encoding_dict = preprocess_data()
+X_train, X_test, y_train, y_test, feature_names, feature_types, encoding_dict = (
+    preprocess_data()
+)
 
 # Entraîner plusieurs modèles et évaluer leurs performances
 models = {
     "KNN": KNeighborsClassifier(
-    n_neighbors=10,
-    weights="uniform",
-    algorithm="auto",
-    leaf_size=150,
-    p=2,
-    metric="minkowski",
-    metric_params=None,
-    n_jobs=None,
-),
-    "Random Forest": 
-    RandomForestClassifier(
-    n_estimators=200, max_depth=50, max_features="sqrt", random_state=70
-),
+        n_neighbors=10,
+        weights="uniform",
+        algorithm="auto",
+        leaf_size=150,
+        p=2,
+        metric="minkowski",
+        metric_params=None,
+        n_jobs=None,
+    ),
+    "Random Forest": RandomForestClassifier(
+        n_estimators=200, max_depth=50, max_features="sqrt", random_state=70
+    ),
     "XGBoost": XGBClassifier(
-    objective="binary:logistic",
-    learning_rate=0.1,
-    n_estimators=350,
-    max_depth=3,
-    random_state=42,
-    max_features="sqrt",
-),
-    "Logistic Regression": LogisticRegression()
+        objective="binary:logistic",
+        learning_rate=0.1,
+        n_estimators=350,
+        max_depth=3,
+        random_state=42,
+        max_features="sqrt",
+    ),
+    "Logistic Regression": LogisticRegression(),
 }
 
 best_model_name = None
@@ -105,7 +109,7 @@ best_accuracy = 0.0
 
 for name, model in models.items():
     accuracy = train_and_log_model(model, name, X_train, y_train, X_test, y_test)
-    
+
     if accuracy > best_accuracy:
         best_accuracy = accuracy
         best_model_name = name
@@ -114,8 +118,15 @@ for name, model in models.items():
 # Enregistrer le meilleur modèle localement en pickle
 with open(f"models/best_model_{best_model_name}.pkl", "wb") as f:
     pickle.dump(best_model, f)
-    save_feature_info(feature_names, feature_types, encoding_dict, output_file="models/feature_info.json")
+    save_feature_info(
+        feature_names,
+        feature_types,
+        encoding_dict,
+        output_file="models/feature_info.json",
+    )
 
-print(f"Le meilleur modèle est {best_model_name} avec une précision de {best_accuracy:.4f}.")
+print(
+    f"Le meilleur modèle est {best_model_name} avec une précision de {best_accuracy:.4f}."
+)
 
 # Exemple d'utilisation de FastAPI pour faire des prédictions avec le meilleur modèle (à intégrer dans votre application FastAPI)

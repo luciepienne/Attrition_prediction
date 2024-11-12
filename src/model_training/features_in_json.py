@@ -1,9 +1,13 @@
 import json
+
 import numpy as np
 
-def save_feature_info(feature_names, feature_types, encoding_dict, output_file="models/feature_info.json"):
+
+def save_feature_info(
+    feature_names, feature_types, encoding_dict, output_file="models/feature_info.json"
+):
     """Sauvegarder les informations sur les features dans un fichier JSON."""
-    
+
     # Créer un dictionnaire avec les informations des features
     feature_info = {
         "feature_names": feature_names,
@@ -30,4 +34,3 @@ def save_feature_info(feature_names, feature_types, encoding_dict, output_file="
         json.dump(feature_info, f, indent=2, default=convert_to_json_serializable)
 
     print(f"Informations sur les features sauvegardées dans {output_file}.")
-
