@@ -5,20 +5,19 @@ features necessary for prediction are integrated.
 """
 
 import json
+import logging
 import os
 import pickle
 import sys
+from contextlib import asynccontextmanager
 
-
+import mlflow
 import numpy as np
 from fastapi import Depends, FastAPI, HTTPException, Query
-from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.openapi.docs import get_swagger_ui_html
-from pydantic import BaseModel, Field, ConfigDict
-from prometheus_client import start_http_server, Summary, Counter
-import mlflow
-from contextlib import asynccontextmanager
-import logging
+from fastapi.security import OAuth2PasswordRequestForm
+from prometheus_client import Counter, Summary, start_http_server
+from pydantic import BaseModel, ConfigDict, Field
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -37,8 +36,11 @@ from auth import (
 app = FastAPI()
 
 # Métriques Prometheus
-REQUEST_TIME = Summary('request_processing_seconds', 'Time spent processing request')
-PREDICTION_COUNTER = Counter('prediction_count', 'Number of predictions made', ['model', 'risk_level'])
+REQUEST_TIME = Summary("request_processing_seconds", "Time spent processing request")
+PREDICTION_COUNTER = Counter(
+    "prediction_count", "Number of predictions made", ["model", "risk_level"]
+)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -47,6 +49,7 @@ async def lifespan(app: FastAPI):
     mlflow.set_tracking_uri("http://localhost:5000")  # Configurer MLflow
     yield
     # Shutdown
+
 
 app = FastAPI(lifespan=lifespan)
 
@@ -129,14 +132,17 @@ class PredictionOutput(BaseModel):
     model_name: str
     prediction: float
     attrition_risk: str
+
     class Config:
         protected_namespaces = ()
+
     def dict(self, *args, **kwargs):
         return {
             "model_name": self.model_name,
             "prediction": self.prediction,
-            "attrition_risk": self.attrition_risk
+            "attrition_risk": self.attrition_risk,
         }
+
 
 @app.post("/token", response_model=Token)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
@@ -161,7 +167,6 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     access_token = create_access_token(data={"sub": user.username})
 
     return {"access_token": access_token, "token_type": "bearer"}
-
 
 
 def predict_model(model_name: str, features_array):
@@ -205,13 +210,15 @@ def predict_model(model_name: str, features_array):
     return {
         "model_name": model_used,
         "prediction": float(prediction_proba),
-        "attrition_risk": risk
+        "attrition_risk": risk,
     }
 
 
 @app.post("/predict", response_model=dict)
 @REQUEST_TIME.time()
-def predict(input_data: PredictionInput, current_user: User = Depends(get_current_user)):
+def predict(
+    input_data: PredictionInput, current_user: User = Depends(get_current_user)
+):
     # Convertir les entrées en valeurs numériques selon l'encodage
     features = []
     for feature_name in feature_info["feature_names"]:
@@ -231,12 +238,18 @@ def predict(input_data: PredictionInput, current_user: User = Depends(get_curren
         try:
             prediction = predict_model(model_name, features_array)
             predictions_output["predictions"].append(prediction)
-               
+
         except Exception as e:
-            logger.error(f"Erreur lors de la prédiction avec le modèle {model_name}: {str(e)}")
-    
-    PREDICTION_COUNTER.labels(model=prediction["model_name"], risk_level=prediction["attrition_risk"]).inc()
-    mlflow.log_metric(f"{prediction['model_name']}_prediction", prediction["prediction"])
+            logger.error(
+                f"Erreur lors de la prédiction avec le modèle {model_name}: {str(e)}"
+            )
+
+    PREDICTION_COUNTER.labels(
+        model=prediction["model_name"], risk_level=prediction["attrition_risk"]
+    ).inc()
+    mlflow.log_metric(
+        f"{prediction['model_name']}_prediction", prediction["prediction"]
+    )
 
     logger.info(f"Prediction output: {predictions_output}")
 

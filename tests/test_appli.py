@@ -1,10 +1,9 @@
-
 import os
 import sys
-import pytest
 
-import streamlit as st
+import pytest
 import requests
+import streamlit as st
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.api.attrition_prediction import get_token
@@ -13,9 +12,16 @@ from src.api.attrition_prediction import get_token
 # Simuler un client API
 class MockClient:
     def post(self, url, data=None, headers=None):
-        if url == "http://localhost:8000/token" and data["username"] == "ADMIN" and data["password"] == "admin":
-            return MockResponse(200, {"access_token": "mock_token", "token_type": "bearer"})
+        if (
+            url == "http://localhost:8000/token"
+            and data["username"] == "ADMIN"
+            and data["password"] == "admin"
+        ):
+            return MockResponse(
+                200, {"access_token": "mock_token", "token_type": "bearer"}
+            )
         return MockResponse(400, {"detail": "Invalid credentials"})
+
 
 class MockResponse:
     def __init__(self, status_code, json_data):
@@ -24,6 +30,7 @@ class MockResponse:
 
     def json(self):
         return self.json_data
+
 
 def test_login_success(monkeypatch):
     # Remplacer le client par un mock
@@ -36,8 +43,9 @@ def test_login_success(monkeypatch):
     # Simuler le processus de login
     token = get_token(username, password)
     print(token)
-    
+
     assert token == "mock_token"
+
 
 def test_login_failure(monkeypatch):
     # Remplacer le client par un mock
@@ -52,6 +60,7 @@ def test_login_failure(monkeypatch):
 
     assert token is None  # Vérifiez que le token n'est pas retourné
     assert "token" not in st.session_state  # Vérifiez que rien n'est stocké
+
 
 if __name__ == "__main__":
     pytest.main([__file__])

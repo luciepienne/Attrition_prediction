@@ -3,13 +3,18 @@ import os
 import pickle
 import sys
 
-import numpy as np
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, classification_report, precision_score, recall_score, f1_score
-
 import mlflow
 import mlflow.sklearn
+import numpy as np
 from mlflow.models.signature import infer_signature
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import (
+    accuracy_score,
+    classification_report,
+    f1_score,
+    precision_score,
+    recall_score,
+)
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -21,7 +26,9 @@ mlflow.set_experiment("Linear_Regression_Attrition")
 
 
 ## Charger et prétraiter les données
-X_train, X_test, y_train, y_test, feature_names, feature_types, encoding_dict = preprocess_data()
+X_train, X_test, y_train, y_test, feature_names, feature_types, encoding_dict = (
+    preprocess_data()
+)
 
 # Créer un modèle de régression logistique
 lr_model = LogisticRegression()
@@ -29,7 +36,7 @@ lr_model = LogisticRegression()
 with mlflow.start_run():
     # Entraîner le modèle
     lr_model.fit(X_train, y_train)
-    
+
     # Faire des prédictions sur les données d'entraînement et de test
     y_train_predict = lr_model.predict(X_train)
     y_test_predict = lr_model.predict(X_test)
@@ -52,7 +59,7 @@ with mlflow.start_run():
     report = classification_report(y_test, y_test_predict)
     with open("classification_report.txt", "w") as f:
         f.write(report)
-    
+
     mlflow.log_artifact("classification_report.txt")
 
     # Enregistrer le modèle
