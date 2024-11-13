@@ -80,77 +80,116 @@ Ce projet fournit une API FastAPI pour prédire le risque d'attrition des employ
 
 ## Utilisation
 
-### Entrainer les modèles
+### Entrainer les modèles et choisir le meilleur modèle
 
-Il faut créer les modèlesen pickle afin d'obtenir les prédictions et les features permettant la prédiction.
+Il faut créer le meilleur modèle de prédiction en pickle afin d'obtenir les prédictions et les features permettant la prédiction.
+
+Pour executer l'entrainement sur les 4 modèles allez dans :
+src/model_training/train_and_best.py
+faites varier les hyper paramètres de chaque modèle et lancer l'entraînement :
+`python src/model_training/train_and_best.py`
+
+le meilleur modèle : best_model.pkl
+ses features : feature_info.json
+ainsi que les détails de ce modèle best_model_detail.json
+à ce stade :
+{
+"best_model_name": "Random Forest",
+"test_accuracy": 0.8741496598639455,
+"hyperparameters": {
+"bootstrap": true,
+"ccp_alpha": 0.0,
+"class_weight": null,
+"criterion": "gini",
+"max_depth": 50,
+"max_features": "sqrt",
+"max_leaf_nodes": null,
+"max_samples": null,
+"min_impurity_decrease": 0.0,
+"min_samples_leaf": 1,
+"min_samples_split": 2,
+"min_weight_fraction_leaf": 0.0,
+"monotonic_cst": null,
+"n_estimators": 200,
+"n_jobs": null,
+"oob_score": false,
+"random_state": 70,
+"verbose": 0,
+"warm_start": false
+}
+}
 
 ### Exposer les modèles de prédictions
 
+Lancer MLFLOW :
+`mlflow ui --port 5000`
+
 Lancer l'API FastAPI :
-bash
-uvicorn src.api.app:app --host 0.0.0.0 --port 8000 --reload
+`python src.api.app.py`
 
 Lancer l'application Streamlit :
 Ouvrez un autre terminal et exécutez :
-bash
-streamlit run src/api/app_client.py
-
+`streamlit run src/api/attrition_prediction.py`
 Accédez à l'application Streamlit à l'adresse : http://localhost:8501.
-Endpoints
-Authentification
-POST /token
-Description : Authentifie un utilisateur et retourne un token JWT.
-Paramètres :
-username: Nom d'utilisateur.
-password: Mot de passe.
-Réponse :
-json
-{
-"access_token": "string",
-"token_type": "bearer"
-}
 
-## Prédiction
+Ouvrir Prometeus pour la collecte des logs :
+http://localhost:8000
 
-POST /predict
-Description : Prédit le risque d'attrition pour un employé donné.
-Paramètres : Les champs suivants sont requis dans le corps de la requête :
-Gender
-Age
-MaritalStatus
-Education
-EducationField
-NumCompaniesWorked
-WorkExperience
-Department
-JobRole
-JobLevel
-DistanceFromHome
-BusinessTravel
-OverTime
-JobInvolvement
-PercentSalaryHike
-MonthlyIncome
-MonthlyRate
-DailyRate
-HourlyRate
-StockOptionLevel
-PerformanceRating
-TrainingTimesLastYear
-YearsWithCurrManager
-OverallSatisfaction
-Réponse :
-json
-{
-"predictions": [
-{
-"model_name": "string",
-"prediction": float,
-"attrition_risk": "string"
-},
-...
-]
-}
+### Endpoints
+
+1. Authentification
+   POST /token
+   Description : Authentifie un utilisateur et retourne un token JWT.
+   Paramètres :
+   username: Nom d'utilisateur.
+   password: Mot de passe.
+   Réponse :
+   json
+   {
+   "access_token": "string",
+   "token_type": "bearer"
+   }
+
+2. Prédiction
+   POST /predict
+   Description : Prédit le risque d'attrition pour un employé donné.
+   Paramètres : Les champs suivants sont requis dans le corps de la requête :
+   Gender
+   Age
+   MaritalStatus
+   Education
+   EducationField
+   NumCompaniesWorked
+   WorkExperience
+   Department
+   JobRole
+   JobLevel
+   DistanceFromHome
+   BusinessTravel
+   OverTime
+   JobInvolvement
+   PercentSalaryHike
+   MonthlyIncome
+   MonthlyRate
+   DailyRate
+   HourlyRate
+   StockOptionLevel
+   PerformanceRating
+   TrainingTimesLastYear
+   YearsWithCurrManager
+   OverallSatisfaction
+   Réponse :
+   json
+   {
+   "predictions": [
+   {
+   "model_name": "string",
+   "prediction": float,
+   "attrition_risk": "string"
+   },
+   ...
+   ]
+   }
 
 ## Tests
 

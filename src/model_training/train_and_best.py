@@ -9,20 +9,14 @@ import numpy as np
 from mlflow.models.signature import infer_signature
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import (
-    accuracy_score,
-    classification_report,
-    f1_score,
-    precision_score,
-    recall_score,
-)
+from sklearn.metrics import (accuracy_score, classification_report, f1_score,
+                             precision_score, recall_score)
 from sklearn.neighbors import KNeighborsClassifier
 from xgboost import XGBClassifier
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from features_in_json import save_feature_info
-
 from data_preprocessing.preprocess_and_split import preprocess_data
+from model_training.features_in_json import save_feature_info
 
 
 def train_and_log_model(model, model_name, X_train, y_train, X_test, y_test):
@@ -55,7 +49,7 @@ def train_and_log_model(model, model_name, X_train, y_train, X_test, y_test):
 
         # Enregistrer le rapport de classification comme artefact
         report = classification_report(y_test, y_test_predict)
-        report_path = f"classification_report_{model_name}.txt"
+        report_path = f"models/reports/classification_report_{model_name}.txt"
         with open(report_path, "w") as f:
             f.write(report)
 
@@ -118,7 +112,7 @@ for name, model in models.items():
 best_model_details = {
     "best_model_name": best_model_name,
     "test_accuracy": best_accuracy,
-    "hyperparameters": best_model.get_params() 
+    "hyperparameters": best_model.get_params(),
 }
 
 with open("models/best_model_detail.json", "w") as json_file:
@@ -137,5 +131,3 @@ with open(f"models/best_model_{best_model_name}.pkl", "wb") as f:
 print(
     f"Le meilleur modèle est {best_model_name} avec une précision de {best_accuracy:.4f}."
 )
-
-
