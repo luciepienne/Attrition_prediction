@@ -20,9 +20,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       - name: Run Pylint
-        run: pylint --disable=C0103,R0903 tests/ src/
+        run: pylint --disable=C0103,R0903,PydanticDeprecatedSince20 tests/ src/
+
+  start-mlflow:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Start MLflow Server
+        run: |
+          mlflow server --host 0.0.0.0 --port 5000 &
+          sleep 10
 
   test:
+    needs: [start-mlflow]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -37,10 +46,10 @@ jobs:
       - name: Run tests with coverage and check score
         run: |
           pytest tests/
-          # Check the coverage score and fail if it's below 6%
           coverage report --fail-under=6
 
   train-and-load-best-model:
+    needs: [start-mlflow]  # Dépendre du job qui démarre MLflow
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
