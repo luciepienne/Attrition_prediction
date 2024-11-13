@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from auth import (
+from api.auth import (
     Token,
     User,
     authenticate_user,
@@ -63,7 +63,9 @@ with open("models/best_model_detail.json", "r") as f:
     best_model_info = json.load(f)
 
 # Charger le meilleur modèle
-best_model_name = best_model_info["best_model_name"]  # Récupérer le nom du meilleur modèle
+best_model_name = best_model_info[
+    "best_model_name"
+]  # Récupérer le nom du meilleur modèle
 with open(f"models/best_model_{best_model_name}.pkl", "rb") as f:
     best_model = pickle.load(f)
 
@@ -126,9 +128,11 @@ class PredictionInput(BaseModel):
 
 class PredictionOutput(BaseModel):
     """Modèle Pydantic pour la sortie de prédiction."""
+
     best_model_name: str
     prediction: float
     attrition_risk: str
+
 
 @app.post("/token", response_model=Token)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
@@ -154,10 +158,13 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
     return {"access_token": access_token, "token_type": "bearer"}
 
+
 @app.post("/predict", response_model=PredictionOutput)
-async def predict(input_data: PredictionInput):
+async def predict(
+    input_data: PredictionInput, current_user: User = Depends(get_current_user)
+):
     """Faire une prédiction sur l'attrition des employés."""
-    
+
     # Convertir les entrées en valeurs numériques selon l'encodage
     features = []
     for feature_name in feature_info["feature_names"]:
@@ -170,7 +177,9 @@ async def predict(input_data: PredictionInput):
     features_array = np.array(features).reshape(1, -1)
 
     # Faire la prédiction avec le meilleur modèle
-    prediction_proba = best_model.predict_proba(features_array)[0][1]  # Assurez-vous que cela correspond à votre modèle
+    prediction_proba = best_model.predict_proba(features_array)[0][
+        1
+    ]  # Assurez-vous que cela correspond à votre modèle
 
     # Interpréter la prédiction
     if prediction_proba < 0.3:
@@ -182,13 +191,20 @@ async def predict(input_data: PredictionInput):
 
         # Log des métriques avec Prometheus et MLflow
     PREDICTION_COUNTER.labels(model=best_model_name, risk_level=risk).inc()
-    
+
     # Log de la prédiction dans MLflow (assurez-vous que mlflow est configuré)
     mlflow.log_metric(f"{best_model_name}_prediction", prediction_proba)
 
-    logger.info(f"Prediction output: Model={best_model_name}, Probability={prediction_proba}, Risk Level={risk}")
+    logger.info(
+        f"Prediction output: Model={best_model_name}, Probability={prediction_proba}, Risk Level={risk}"
+    )
 
-    return PredictionOutput(best_model_name=best_model_name, prediction=float(prediction_proba), attrition_risk=risk)
+    return PredictionOutput(
+        best_model_name=best_model_name,
+        prediction=float(prediction_proba),
+        attrition_risk=risk,
+    )
+
 
 @app.get("/user_info")
 async def get_user_info(current_user: User = Depends(get_current_user)):

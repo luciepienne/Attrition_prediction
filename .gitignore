@@ -7,3 +7,4 @@ tmp/
 mlruns/
 mlartifacts/
 best_model_detail.json
+models/reports/

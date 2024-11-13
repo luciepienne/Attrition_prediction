@@ -73,7 +73,7 @@ def test_predict_authorized():
     response = client.post(
         "/predict",
         headers={"Authorization": f"Bearer {token}"},
-        params={
+        json={
             "Gender": "Female",
             "Age": 32,
             "MaritalStatus": "Divorced",
@@ -102,19 +102,15 @@ def test_predict_authorized():
     )
 
     assert response.status_code == 200
-    assert "predictions" in response.json()
-
-    predictions = response.json()["predictions"]
-    assert len(predictions) == 4
-    for prediction in predictions:
-        assert "model_name" in prediction
-        assert "prediction" in prediction
-        assert "attrition_risk" in prediction
-        assert prediction["attrition_risk"] in [
-            "Faible risque de départ",
-            "Risque moyen de départ",
-            "Risque élevé de départ",
-        ]
+    prediction = response.json()
+    assert "best_model_name" in prediction
+    assert "prediction" in prediction
+    assert "attrition_risk" in prediction
+    assert prediction["attrition_risk"] in [
+        "Faible risque de départ",
+        "Risque moyen de départ",
+        "Risque élevé de départ",
+    ]
 
 
 def test_get_user_info():

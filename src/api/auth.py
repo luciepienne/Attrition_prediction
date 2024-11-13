@@ -1,3 +1,4 @@
+'''Module defining rules for authentification in API'''
 from datetime import datetime, timedelta
 
 from fastapi import Depends, HTTPException
@@ -27,11 +28,13 @@ fake_users_db = {
 
 
 class Token(BaseModel):
+    '''Class to define token'''
     access_token: str
     token_type: str
 
 
 class User(BaseModel):
+    '''Class to define users'''
     username: str
 
 
