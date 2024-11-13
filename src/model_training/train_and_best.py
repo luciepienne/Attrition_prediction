@@ -1,4 +1,4 @@
-'''This module trains and chose the best model to use for prection of employee attrition'''
+'''This module trains and choses the best model to use for prediction of employee attrition'''
 import json
 import os
 import pickle
