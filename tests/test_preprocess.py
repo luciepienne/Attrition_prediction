@@ -9,10 +9,12 @@ import pytest
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.data_preprocessing.preprocess_and_split import (apply_smote,
-                                                         encode_categorical,
-                                                         scale_features,
-                                                         split_data)
+from src.data_preprocessing.preprocess_and_split import (
+    apply_smote,
+    encode_categorical,
+    scale_features,
+    split_data,
+)
 
 
 def test_encode_categorical():

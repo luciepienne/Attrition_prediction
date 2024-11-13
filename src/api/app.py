@@ -24,8 +24,14 @@ logger = logging.getLogger(__name__)
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from api.auth import (Token, User, authenticate_user, create_access_token,
-                      fake_users_db, get_current_user)
+from api.auth import (
+    Token,
+    User,
+    authenticate_user,
+    create_access_token,
+    fake_users_db,
+    get_current_user,
+)
 
 app = FastAPI()
 
@@ -154,7 +160,9 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
 
 @app.post("/predict", response_model=PredictionOutput)
-async def predict(input_data: PredictionInput, current_user: User = Depends(get_current_user)):
+async def predict(
+    input_data: PredictionInput, current_user: User = Depends(get_current_user)
+):
     """Faire une prédiction sur l'attrition des employés."""
 
     # Convertir les entrées en valeurs numériques selon l'encodage

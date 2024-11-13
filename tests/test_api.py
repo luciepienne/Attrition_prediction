@@ -112,6 +112,7 @@ def test_predict_authorized():
         "Risque élevé de départ",
     ]
 
+
 def test_get_user_info():
     """Test to retrieve user info with valid token."""
     token_response = client.post(

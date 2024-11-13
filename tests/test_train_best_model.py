@@ -1,3 +1,5 @@
+""" Unit tests for key functions to train and chose best model"""
+
 import os
 import sys
 
@@ -10,20 +12,20 @@ from sklearn.ensemble import RandomForestClassifier
 
 from src.model_training.train_and_best import train_and_log_model
 
+
 @pytest.fixture(autouse=True)
 def mock_mlflow():
-    with patch('mlflow.set_experiment'), \
-         patch('mlflow.start_run'), \
-         patch('mlflow.log_param'), \
-         patch('mlflow.log_metric'), \
-         patch('mlflow.sklearn.log_model'), \
-         patch('mlflow.end_run'):
+    with patch("mlflow.set_experiment"), patch("mlflow.start_run"), patch(
+        "mlflow.log_param"
+    ), patch("mlflow.log_metric"), patch("mlflow.sklearn.log_model"), patch(
+        "mlflow.end_run"
+    ):
         yield
 
-@patch('mlflow.log_metric')
-@patch('mlflow.log_param')
-@patch('mlflow.sklearn.log_model')
 
+@patch("mlflow.log_metric")
+@patch("mlflow.log_param")
+@patch("mlflow.sklearn.log_model")
 def test_train_and_log_model(mock_log_model, mock_log_param, mock_log_metric):
     # Créer des données synthétiques pour le test
     X = np.random.rand(100, 20)  # 100 samples, 20 features

@@ -1,3 +1,4 @@
+'''This module trains and chose the best model to use for prection of employee attrition'''
 import json
 import os
 import pickle
@@ -5,12 +6,16 @@ import sys
 
 import mlflow
 import mlflow.sklearn
-import numpy as np
 from mlflow.models.signature import infer_signature
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import (accuracy_score, classification_report, f1_score,
-                             precision_score, recall_score)
+from sklearn.metrics import (
+    accuracy_score,
+    classification_report,
+    f1_score,
+    precision_score,
+    recall_score,
+)
 from sklearn.neighbors import KNeighborsClassifier
 from xgboost import XGBClassifier
 
@@ -20,6 +25,8 @@ from model_training.features_in_json import save_feature_info
 
 
 def train_and_log_model(model, model_name, X_train, y_train, X_test, y_test):
+    '''Will train the 4 models chosen initially, 
+    log the results in MLFLOW and identify the best one'''
     mlflow.set_experiment(model_name)  # Créer une expérience par modèle
     with mlflow.start_run():
         # Entraîner le modèle

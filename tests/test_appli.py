@@ -1,6 +1,7 @@
+"""Module for testing the attrition prediction application."""
+
 import os
 import sys
-
 import pytest
 import requests
 import streamlit as st
@@ -9,9 +10,10 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.api.attrition_prediction import get_token
 
 
-# Simuler un client API
 class MockClient:
+    """Mock client for simulating API requests."""
     def post(self, url, data=None, headers=None):
+        """Simulate a POST request."""
         if (
             url == "http://localhost:8001/token"
             and data["username"] == "ADMIN"
@@ -24,16 +26,19 @@ class MockClient:
 
 
 class MockResponse:
+    """Mock response object for simulated API requests."""
     def __init__(self, status_code, json_data):
+        """Initialize the mock response."""
         self.status_code = status_code
         self.json_data = json_data
 
     def json(self):
+        """Return the JSON data of the response."""
         return self.json_data
 
 
 def test_login_success(monkeypatch):
-    # Remplacer le client par un mock
+    """Test successful login attempt."""
     monkeypatch.setattr(requests, "post", MockClient().post)
 
     st.session_state = {}  # Réinitialiser l'état de la session
@@ -48,7 +53,7 @@ def test_login_success(monkeypatch):
 
 
 def test_login_failure(monkeypatch):
-    # Remplacer le client par un mock
+    """Test failed login attempt."""
     monkeypatch.setattr(requests, "post", MockClient().post)
 
     st.session_state = {}  # Réinitialiser l'état de la session
