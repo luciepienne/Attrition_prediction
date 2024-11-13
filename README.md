@@ -6,35 +6,32 @@ Ce projet fournit une API FastAPI pour prédire le risque d'attrition des employ
 
 ## Structure du projet :
 
-`prediction_attrition/
+`
+prediction_attrition/
 │
 ├── data/                          # Dossier pour les données
 │   └── IBM_data.csv               # Kaggle : https://www.kaggle.com/datasets/pavansubhasht/ibm-hr-analytics-attrition-dataset/data
 │
 ├── models/                        # Dossier pour les modèles de machine learning
-│   ├── knn_model.pkl              # Modèle KNN
-│   ├── random_forest_model.pkl    # Modèle Random Forest
-│   ├── linear_regression_model.pkl # Modèle de régression linéaire
-│   ├── xgboost_model.pkl          # Modèle XGBoost
+│   ├── best_model.pkl             # Meilleur modèle choisi suite aux entraînements (actuellement Random Forest test_accuracy 0.87)
+│   ├── best_model_details.json    # donne le nom, le résultats de test_accuracy et les hyperparamètres du meilleur modèle
 │   └── feature_info.json          # Informations sur les features
 │
 ├── notebooks/                     # Dossier pour les notebooks Jupyter
-│   └── data_analysis.ipynb          # Notebook d'exploration des données
+│   └── data_analysis.ipynb        # Notebook d'exploration des données
 │
 ├── src/                           # Dossier source pour le code de l'application
 │   ├── api/                       # Dossier pour l'API FastAPI
-│   │   ├── app.py                 # Application FastAPI principale
+│   │   ├── app.py                 # Application FastAPI principale => localhost:8001
 │   │   ├── auth.py                # Gestion de l'authentification
-│   │   └── api_client.py          # Client API avec Streamlit
+│   │   └── prediction_attrition.py# Client API avec Streamlit
 │   │
 │   ├── data_processing/            # Dossier pour le traitement des données
-│   │   └── preprocess_and_split.py # Script de nettoyage des données
+│   │   └── preprocess_and_split.py # Script de nettoyage des données et de split en train and test dataset
 │   │
 │   ├── model_training/            # Dossier pour l'entraînement des modèles
-│   │   ├── knn_model.py               # Script d'entraînement des modèle KNN
-│   │   ├── random_forest_model.py     # Script d'entraînement des modèleRandom Forest
-│   │   ├── linear_regression_model.py # Script d'entraînement des modèle régression linéaire
-│   │   ├── xgboost_model.ppy          # Script d'entraînement des modèle XGBoost
+│   │   ├── feature_in_json.json   # fonction pour générer les features des modèles en .json
+│   │   └── train_and_best.py      # fonction d'entraînement des modèles et de sélection du meilleur
 │   ├── monitoring/
 │   │   ├── prometheus_config.yml
 │   │   ├── grafana_dashboard.json
@@ -45,10 +42,13 @@ Ce projet fournit une API FastAPI pour prédire le risque d'attrition des employ
 │ 
 ├── tests/                         # Dossier pour les tests unitaires et d'intégration
 │   ├── test_app.py                # Tests pour l'application FastAPI
+│   ├── test_preprocess.py         # Tests pour les fonctions de cleansing des data
+│   ├── test_train_best_model.py   # Tests pour la fonction d'entraînement
 │   └── test_api_client.py         # Tests pour le client API Streamlit
 │ 
 ├── requirements.txt               # Fichier listant les dépendances Python
-└── README.md                      # Documentation du projet`
+└── README.md                      # Documentation du projet
+`
 
 ## Table des matières
 
