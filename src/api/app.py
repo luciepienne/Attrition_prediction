@@ -46,23 +46,23 @@ app = FastAPI()
 async def lifespan(app: FastAPI):
     # Startup
     # start_http_server(8000)  # Démarrer le serveur Prometheus
-    mlflow.set_tracking_uri("http://localhost:5000")  # Configurer MLflow
+    mlflow.set_tracking_uri("http://localhost:5000")
     yield
-    # Shutdown
+
 
 
 app = FastAPI(lifespan=lifespan)
 
 
-# Charger les informations sur les features
+
 with open("models/feature_info.json", "r") as f:
     feature_info = json.load(f)
 
-# Charger le nom du meilleur modèle
+
 with open("models/best_model_detail.json", "r") as f:
     best_model_info = json.load(f)
 
-# Charger le meilleur modèle
+
 best_model_name = best_model_info[
     "best_model_name"
 ]  # Récupérer le nom du meilleur modèle
@@ -165,7 +165,6 @@ async def predict(
 ):
     """Faire une prédiction sur l'attrition des employés."""
 
-    # Convertir les entrées en valeurs numériques selon l'encodage
     features = []
     for feature_name in feature_info["feature_names"]:
         value = getattr(input_data, feature_name)
@@ -173,15 +172,13 @@ async def predict(
             value = feature_info["encoding_dict"][feature_name].get(value, value)
         features.append(float(value))
 
-    # Préparer les données pour la prédiction
     features_array = np.array(features).reshape(1, -1)
 
-    # Faire la prédiction avec le meilleur modèle
+
     prediction_proba = best_model.predict_proba(features_array)[0][
         1
-    ]  # Assurez-vous que cela correspond à votre modèle
+    ]
 
-    # Interpréter la prédiction
     if prediction_proba < 0.3:
         risk = "Faible risque de départ"
     elif prediction_proba < 0.7:
@@ -189,10 +186,9 @@ async def predict(
     else:
         risk = "Risque élevé de départ"
 
-        # Log des métriques avec Prometheus et MLflow
+    # Log des métriques avec Prometheus et MLflow
     # PREDICTION_COUNTER.labels(model=best_model_name, risk_level=risk).inc()
 
-    # Log de la prédiction dans MLflow (assurez-vous que mlflow est configuré)
     mlflow.log_metric(f"{best_model_name}_prediction", prediction_proba)
 
     logger.info(

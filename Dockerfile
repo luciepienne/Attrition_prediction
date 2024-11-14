@@ -11,7 +11,6 @@ COPY . .
 
 EXPOSE 5000 8001 8501
 
-# Rendre le script start.sh exécutable
 RUN chmod +x start.sh
 
 CMD ["./start.sh"]

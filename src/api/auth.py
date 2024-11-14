@@ -7,16 +7,16 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 
-# Configuration des constantes
+
 SECRET_KEY = "password"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-# Initialisation du contexte de hachage des mots de passe
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-# Simuler une base de données d'utilisateurs
+# base de données d'utilisateurs, simulée
 fake_users_db = {
     "ADMIN": {
         "username": "admin",

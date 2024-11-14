@@ -27,34 +27,28 @@ from model_training.features_in_json import save_feature_info
 def train_and_log_model(model, model_name, X_train, y_train, X_test, y_test):
     '''Will train the 4 models chosen initially, 
     log the results in MLFLOW and identify the best one'''
-    mlflow.set_experiment(model_name)  # Créer une expérience par modèle
+    mlflow.set_experiment(model_name)  
     with mlflow.start_run():
-        # Entraîner le modèle
         model.fit(X_train, y_train)
 
-        # Faire des prédictions sur les données d'entraînement et de test
         y_train_predict = model.predict(X_train)
         y_test_predict = model.predict(X_test)
 
-        # Calculer les métriques
         train_accuracy = accuracy_score(y_train, y_train_predict)
         test_accuracy = accuracy_score(y_test, y_test_predict)
         precision = precision_score(y_test, y_test_predict)
         recall = recall_score(y_test, y_test_predict)
         f1 = f1_score(y_test, y_test_predict)
 
-        # Enregistrer les paramètres du modèle
         for param_name, param_value in model.get_params().items():
             mlflow.log_param(param_name, param_value)
 
-        # Enregistrer les métriques dans MLflow
         mlflow.log_metric("train_accuracy", train_accuracy)
         mlflow.log_metric("test_accuracy", test_accuracy)
         mlflow.log_metric("precision", precision)
         mlflow.log_metric("recall", recall)
         mlflow.log_metric("f1_score", f1)
 
-        # Enregistrer le rapport de classification comme artefact
         report = classification_report(y_test, y_test_predict)
         report_path = f"models/reports/classification_report_{model_name}.txt"
         with open(report_path, "w") as f:
@@ -62,23 +56,22 @@ def train_and_log_model(model, model_name, X_train, y_train, X_test, y_test):
 
         mlflow.log_artifact(report_path)
 
-        # Enregistrer le modèle avec signature
+
         signature = infer_signature(X_train, y_train_predict)
         mlflow.sklearn.log_model(model, f"{model_name}_model", signature=signature)
 
     print(f"Modèle {model_name} entraîné et enregistré avec succès.")
-    return test_accuracy  # Retourner la précision du test
+    return test_accuracy
 
 
-# Configuration de MLflow
+
 mlflow.set_tracking_uri("http://localhost:5000")
 
-# Charger et prétraiter les données
+
 X_train, X_test, y_train, y_test, feature_names, feature_types, encoding_dict = (
     preprocess_data()
 )
 
-# Entraîner plusieurs modèles et évaluer leurs performances
 models = {
     "KNN": KNeighborsClassifier(
         n_neighbors=10,
@@ -125,7 +118,6 @@ best_model_details = {
 with open("models/best_model_detail.json", "w") as json_file:
     json.dump(best_model_details, json_file, indent=2)
 
-# Enregistrer le meilleur modèle localement en pickle
 with open(f"models/best_model_{best_model_name}.pkl", "wb") as f:
     pickle.dump(best_model, f)
     save_feature_info(
