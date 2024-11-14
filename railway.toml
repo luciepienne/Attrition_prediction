@@ -2,6 +2,21 @@
 builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
+[[services]]
+name = "mlflow-service"
+[services.ports]
+  5000 = "5000"
+
+[[services]]
+name = "fastapi-service"
+[services.ports]
+  8001 = "8001"
+
+[[services]]
+name = "streamlit-service"
+[services.ports]
+  8501 = "8501"
+
 [deploy]
 startCommand = "./start.sh"
 healthcheckPath = "/docs"
