@@ -9,8 +9,6 @@ imbalanced-learn
 streamlit
 pylint
 pytest
-black
-isort
 fastapi
 uvicorn
 python-jose[cryptography]

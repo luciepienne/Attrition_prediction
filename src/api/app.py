@@ -16,7 +16,7 @@ import numpy as np
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.security import OAuth2PasswordRequestForm
-from prometheus_client import Counter, Summary, start_http_server
+# from prometheus_client import Counter, Summary, start_http_server
 from pydantic import BaseModel, Field
 
 logging.basicConfig(level=logging.INFO)
@@ -36,16 +36,16 @@ from api.auth import (
 app = FastAPI()
 
 # Métriques Prometheus
-REQUEST_TIME = Summary("request_processing_seconds", "Time spent processing request")
-PREDICTION_COUNTER = Counter(
-    "prediction_count", "Number of predictions made", ["model", "risk_level"]
-)
+# REQUEST_TIME = Summary("request_processing_seconds", "Time spent processing request")
+# PREDICTION_COUNTER = Counter(
+#     "prediction_count", "Number of predictions made", ["model", "risk_level"]
+# )
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    start_http_server(8000)  # Démarrer le serveur Prometheus
+    # start_http_server(8000)  # Démarrer le serveur Prometheus
     mlflow.set_tracking_uri("http://localhost:5000")  # Configurer MLflow
     yield
     # Shutdown
@@ -190,7 +190,7 @@ async def predict(
         risk = "Risque élevé de départ"
 
         # Log des métriques avec Prometheus et MLflow
-    PREDICTION_COUNTER.labels(model=best_model_name, risk_level=risk).inc()
+    # PREDICTION_COUNTER.labels(model=best_model_name, risk_level=risk).inc()
 
     # Log de la prédiction dans MLflow (assurez-vous que mlflow est configuré)
     mlflow.log_metric(f"{best_model_name}_prediction", prediction_proba)

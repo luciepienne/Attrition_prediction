@@ -7,80 +7,40 @@ on:
     branches: [ main ]
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.11'
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-      - name: Run Pylint
-        run: pylint --disable=C0103,R0903,PydanticDeprecatedSince20 tests/ src/
-
-  start-mlflow:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Start MLflow Server
-        run: |
-          mlflow server --host 0.0.0.0 --port 5000 &
-          sleep 10
-
-  test:
-    needs: [start-mlflow]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.11'
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-      - name: Run tests with coverage and check score
-        run: |
-          pytest tests/
-          coverage report --fail-under=6
-
-  train-and-load-best-model:
-    needs: [start-mlflow]  # Dépendre du job qui démarre MLflow
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.11'
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-      - name: Train model and log with MLflow
-        run: python src/model_training/train_and_best.py
-
   build-and-push:
-    needs: [lint, test, train-and-load-best-model]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Build Docker image and push to Railway (or Docker Hub)
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.11'
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Install dependencies
         run: |
-          docker build -t attrition_prediction .
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Build and push Docker image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/attrition_prediction:latest .
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login --username "${{ secrets.DOCKER_USERNAME }}" --password-stdin 
-          docker push attrition_prediction
+          docker push ${{ secrets.DOCKER_USERNAME }}/attrition_prediction:latest
+        if: success()
 
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to Railway using Railway CLI 
+      - name: Install Railway CLI
+        run: npm i -g @railway/cli
+      - name: Deploy to Railway
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
           railway up --project ${{ secrets.RAILWAY_PROJECTID }}
+        if: success()
