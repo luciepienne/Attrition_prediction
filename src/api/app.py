@@ -17,7 +17,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.security import OAuth2PasswordRequestForm
 # from prometheus_client import Counter, Summary, start_http_server
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -124,6 +124,25 @@ class PredictionInput(BaseModel):
     OverallSatisfaction: float = Field(
         ..., ge=1, le=5, description="Overall job satisfaction (1-5)"
     )
+
+    @field_validator('DailyRate', 'HourlyRate', 'MonthlyIncome', 'MonthlyRate', 'NumCompaniesWorked', 
+                        'TrainingTimesLastYear', 'YearsWithCurrManager', 'WorkExperience')
+    def validate_positive(cls, value):
+            if value < 0:
+                raise ValueError("Must be a positive value")
+            return value
+
+    @field_validator('Education', 'JobInvolvement', 'JobLevel', 'PerformanceRating', 
+                        'StockOptionLevel')
+    def validate_range(cls, value):
+            if not (0 <= value <= 5):
+                raise ValueError("Must be between 0 and 5")
+            return value
+    @field_validator('Age')
+    def validate_age(cls, value):
+            if not (18 <= value <= 67):
+                raise ValueError("Must be between 18 and 67")
+            return value
 
 
 class PredictionOutput(BaseModel):
