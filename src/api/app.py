@@ -208,7 +208,7 @@ async def predict(
     # Log des métriques avec Prometheus et MLflow
     # PREDICTION_COUNTER.labels(model=best_model_name, risk_level=risk).inc()
 
-    mlflow.log_metric(f"{best_model_name}_prediction", prediction_proba)
+    # mlflow.log_metric(f"{best_model_name}_prediction", prediction_proba)
 
     logger.info(
         f"Prediction output: Model={best_model_name}, Probability={prediction_proba}, Risk Level={risk}"

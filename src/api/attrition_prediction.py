@@ -3,8 +3,11 @@ It includes endpoints for authentication and prediction using various machine le
 
 import requests
 import streamlit as st
+import os
 
-API_URL = "http://localhost:8001"
+#API_URL = "http://localhost:8001"
+
+API_URL = os.getenv("FASTAPI_URL", "http://fastapi:8001")
 
 
 def get_token(username: str, password: str) -> str:
