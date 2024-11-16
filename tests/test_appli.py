@@ -2,6 +2,7 @@
 
 import os
 import sys
+
 import pytest
 import requests
 import streamlit as st
@@ -12,6 +13,7 @@ from src.api.attrition_prediction import get_token
 
 class MockClient:
     """Mock client for simulating API requests."""
+
     def post(self, url, data=None, headers=None):
         """Simulate a POST request."""
         if (
@@ -27,6 +29,7 @@ class MockClient:
 
 class MockResponse:
     """Mock response object for simulated API requests."""
+
     def __init__(self, status_code, json_data):
         """Initialize the mock response."""
         self.status_code = status_code

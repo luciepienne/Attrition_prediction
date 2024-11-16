@@ -8,7 +8,6 @@ def save_feature_info(
 ):
     """Sauvegarder les informations sur les features dans un fichier JSON."""
 
-
     feature_info = {
         "feature_names": feature_names,
         "feature_types": {name: str(dtype) for name, dtype in feature_types.items()},
@@ -27,7 +26,6 @@ def save_feature_info(
             return obj.tolist()
         else:
             return obj
-
 
     with open(output_file, "w") as f:
         json.dump(feature_info, f, indent=2, default=convert_to_json_serializable)

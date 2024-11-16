@@ -16,6 +16,7 @@ import numpy as np
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.security import OAuth2PasswordRequestForm
+
 # from prometheus_client import Counter, Summary, start_http_server
 from pydantic import BaseModel, Field, field_validator
 
@@ -50,9 +51,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-
 app = FastAPI(lifespan=lifespan)
-
 
 
 with open("models/feature_info.json", "r") as f:
@@ -125,24 +124,38 @@ class PredictionInput(BaseModel):
         ..., ge=1, le=5, description="Overall job satisfaction (1-5)"
     )
 
-    @field_validator('DailyRate', 'HourlyRate', 'MonthlyIncome', 'MonthlyRate', 'NumCompaniesWorked', 
-                        'TrainingTimesLastYear', 'YearsWithCurrManager', 'WorkExperience')
+    @field_validator(
+        "DailyRate",
+        "HourlyRate",
+        "MonthlyIncome",
+        "MonthlyRate",
+        "NumCompaniesWorked",
+        "TrainingTimesLastYear",
+        "YearsWithCurrManager",
+        "WorkExperience",
+    )
     def validate_positive(cls, value):
-            if value < 0:
-                raise ValueError("Must be a positive value")
-            return value
+        if value < 0:
+            raise ValueError("Must be a positive value")
+        return value
 
-    @field_validator('Education', 'JobInvolvement', 'JobLevel', 'PerformanceRating', 
-                        'StockOptionLevel')
+    @field_validator(
+        "Education",
+        "JobInvolvement",
+        "JobLevel",
+        "PerformanceRating",
+        "StockOptionLevel",
+    )
     def validate_range(cls, value):
-            if not (0 <= value <= 5):
-                raise ValueError("Must be between 0 and 5")
-            return value
-    @field_validator('Age')
+        if not (0 <= value <= 5):
+            raise ValueError("Must be between 0 and 5")
+        return value
+
+    @field_validator("Age")
     def validate_age(cls, value):
-            if not (18 <= value <= 67):
-                raise ValueError("Must be between 18 and 67")
-            return value
+        if not (18 <= value <= 67):
+            raise ValueError("Must be between 18 and 67")
+        return value
 
 
 class PredictionOutput(BaseModel):
@@ -193,10 +206,7 @@ async def predict(
 
     features_array = np.array(features).reshape(1, -1)
 
-
-    prediction_proba = best_model.predict_proba(features_array)[0][
-        1
-    ]
+    prediction_proba = best_model.predict_proba(features_array)[0][1]
 
     if prediction_proba < 0.3:
         risk = "Faible risque de départ"

@@ -1,4 +1,5 @@
-'''Module defining rules for authentification in API'''
+"""Module defining rules for authentification in API"""
+
 from datetime import datetime, timedelta
 
 from fastapi import Depends, HTTPException
@@ -6,7 +7,6 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
-
 
 SECRET_KEY = "password"
 ALGORITHM = "HS256"
@@ -28,13 +28,15 @@ fake_users_db = {
 
 
 class Token(BaseModel):
-    '''Class to define token'''
+    """Class to define token"""
+
     access_token: str
     token_type: str
 
 
 class User(BaseModel):
-    '''Class to define users'''
+    """Class to define users"""
+
     username: str
 
 

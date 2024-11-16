@@ -1,10 +1,10 @@
 """This module trains and chooses the best model to use for prediction of employee attrition."""
 
 import json
+import logging
 import os
 import pickle
 import sys
-import logging
 from datetime import datetime
 
 import mlflow
@@ -26,8 +26,11 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from data_preprocessing.preprocess_and_split import preprocess_data
 from model_training.features_in_json import save_feature_info
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
+
 
 def train_and_log_model(model, model_name, x_train, y_train, x_test, y_test):
     """
@@ -47,7 +50,12 @@ def train_and_log_model(model, model_name, x_train, y_train, x_test, y_test):
         recall = recall_score(y_test, y_test_predict)
         f1 = f1_score(y_test, y_test_predict)
 
-        logger.info("Metrics for %s: Test Accuracy = %.4f, F1 Score = %.4f", model_name, test_accuracy, f1)
+        logger.info(
+            "Metrics for %s: Test Accuracy = %.4f, F1 Score = %.4f",
+            model_name,
+            test_accuracy,
+            f1,
+        )
 
         for param_name, param_value in model.get_params().items():
             mlflow.log_param(param_name, param_value)
@@ -60,7 +68,7 @@ def train_and_log_model(model, model_name, x_train, y_train, x_test, y_test):
 
         report = classification_report(y_test, y_test_predict)
         report_path = f"models/reports/classification_report_{model_name}.txt"
-        with open(report_path, "w", encoding='utf-8') as report_file:
+        with open(report_path, "w", encoding="utf-8") as report_file:
             report_file.write(report)
 
         mlflow.log_artifact(report_path)
@@ -68,15 +76,20 @@ def train_and_log_model(model, model_name, x_train, y_train, x_test, y_test):
         signature = infer_signature(x_train, y_train_predict)
         mlflow.sklearn.log_model(model, f"{model_name}_model", signature=signature)
 
-    logger.info("Model %s trained and logged successfully with test accuracy of %.4f.", model_name, test_accuracy)
+    logger.info(
+        "Model %s trained and logged successfully with test accuracy of %.4f.",
+        model_name,
+        test_accuracy,
+    )
     return test_accuracy
+
 
 def update_model_history(model_name, accuracy):
     """
     Update the history of model accuracies.
     """
     try:
-        with open('models/model_history.json', 'r', encoding='utf-8') as history_file:
+        with open("models/model_history.json", "r", encoding="utf-8") as history_file:
             history = json.load(history_file)
     except FileNotFoundError:
         history = {}
@@ -86,23 +99,32 @@ def update_model_history(model_name, accuracy):
 
     history[model_name].append(accuracy)
 
-    with open('models/model_history.json', 'w', encoding='utf-8') as history_file:
+    with open("models/model_history.json", "w", encoding="utf-8") as history_file:
         json.dump(history, history_file)
+
 
 def load_previous_best_model():
     """
     Load the test accuracy and name of the previously best model.
     """
     try:
-        with open("models/best_model_detail.json", "r", encoding='utf-8') as detail_file:
+        with open(
+            "models/best_model_detail.json", "r", encoding="utf-8"
+        ) as detail_file:
             best_model_details = json.load(detail_file)
-            return best_model_details["best_model_name"], best_model_details["test_accuracy"]
+            return (
+                best_model_details["best_model_name"],
+                best_model_details["test_accuracy"],
+            )
     except FileNotFoundError:
         return None, 0
 
+
 mlflow.set_tracking_uri("http://localhost:5000")
 
-x_train, x_test, y_train, y_test, feature_names, feature_types, encoding_dict = preprocess_data()
+x_train, x_test, y_train, y_test, feature_names, feature_types, encoding_dict = (
+    preprocess_data()
+)
 
 models = {
     "KNN": KNeighborsClassifier(
@@ -114,10 +136,7 @@ models = {
         metric="minkowski",
     ),
     "Random Forest": RandomForestClassifier(
-        n_estimators=20,
-        max_depth=100,
-        max_features="sqrt",
-        random_state=10
+        n_estimators=20, max_depth=100, max_features="sqrt", random_state=10
     ),
     "XGBoost": XGBClassifier(
         objective="binary:logistic",
@@ -142,11 +161,18 @@ for name, model in models.items():
         best_accuracy = accuracy
         best_model_name = name
         best_model = model
-        logger.info("New best model found: %s with test accuracy of %.4f", name, accuracy)
+        logger.info(
+            "New best model found: %s with test accuracy of %.4f", name, accuracy
+        )
 
 current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 if best_accuracy > previous_best_accuracy:
-    logger.info("[%s] New best model recorded: %s with a precision of %.4f", current_time, best_model_name, best_accuracy)
+    logger.info(
+        "[%s] New best model recorded: %s with a precision of %.4f",
+        current_time,
+        best_model_name,
+        best_accuracy,
+    )
 
     best_model_details = {
         "best_model_name": best_model_name,
@@ -154,15 +180,19 @@ if best_accuracy > previous_best_accuracy:
         "hyperparameters": best_model.get_params(),
     }
 
-    with open("models/best_model_detail.json", "w", encoding='utf-8') as json_file:
+    with open("models/best_model_detail.json", "w", encoding="utf-8") as json_file:
         json.dump(best_model_details, json_file, indent=2)
 
     with open(f"models/best_model_{best_model_name}.pkl", "wb") as model_file:
         pickle.dump(best_model, model_file)
 
 else:
-    logger.info("[%s] No new best model found. The previous model %s remains the best with a precision of %.4f", 
-                current_time, previous_best_model_name, previous_best_accuracy)
+    logger.info(
+        "[%s] No new best model found. The previous model %s remains the best with a precision of %.4f",
+        current_time,
+        previous_best_model_name,
+        previous_best_accuracy,
+    )
 
 save_feature_info(
     feature_names,

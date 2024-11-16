@@ -197,6 +197,18 @@ Pour exécuter les tests, assurez-vous que votre API est en cours d'exécution, 
 bash
 pytest tests/
 
+## Déploiement
+Le déploiement du front et du back se fait sur Dockerhub et sur Railway via Github Action.
+
+Pensez à intégrer à votre projet Github les actions variables suivantes :
+RAILWAY_TOKEN
+DOCKER_USERNAME
+DOCKER_PASSWORD
+
+Pour l'instant les entraînements du modèle sont conceptualisés en local.
+
+
+
 ## Contributions
 
 Les contributions sont les bienvenues ! Veuillez soumettre une demande de tirage (pull request) pour toute amélioration ou correction.
