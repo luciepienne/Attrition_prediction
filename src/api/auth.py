@@ -1,4 +1,5 @@
-'''Module defining rules for authentification in API'''
+"""Module defining rules for authentification in API"""
+
 from datetime import datetime, timedelta
 
 from fastapi import Depends, HTTPException
@@ -7,16 +8,15 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 
-# Configuration des constantes
 SECRET_KEY = "password"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-# Initialisation du contexte de hachage des mots de passe
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-# Simuler une base de données d'utilisateurs
+# base de données d'utilisateurs, simulée
 fake_users_db = {
     "ADMIN": {
         "username": "admin",
@@ -28,13 +28,15 @@ fake_users_db = {
 
 
 class Token(BaseModel):
-    '''Class to define token'''
+    """Class to define token"""
+
     access_token: str
     token_type: str
 
 
 class User(BaseModel):
-    '''Class to define users'''
+    """Class to define users"""
+
     username: str
 
 

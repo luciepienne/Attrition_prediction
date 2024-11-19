@@ -16,8 +16,9 @@ import numpy as np
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.security import OAuth2PasswordRequestForm
-from prometheus_client import Counter, Summary, start_http_server
-from pydantic import BaseModel, Field
+
+# from prometheus_client import Counter, Summary, start_http_server
+from pydantic import BaseModel, Field, field_validator
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -36,33 +37,31 @@ from api.auth import (
 app = FastAPI()
 
 # Métriques Prometheus
-REQUEST_TIME = Summary("request_processing_seconds", "Time spent processing request")
-PREDICTION_COUNTER = Counter(
-    "prediction_count", "Number of predictions made", ["model", "risk_level"]
-)
+# REQUEST_TIME = Summary("request_processing_seconds", "Time spent processing request")
+# PREDICTION_COUNTER = Counter(
+#     "prediction_count", "Number of predictions made", ["model", "risk_level"]
+# )
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    start_http_server(8000)  # Démarrer le serveur Prometheus
-    mlflow.set_tracking_uri("http://localhost:5000")  # Configurer MLflow
+    # start_http_server(8000)  # Démarrer le serveur Prometheus
+    mlflow.set_tracking_uri("http://localhost:5000")
     yield
-    # Shutdown
 
 
 app = FastAPI(lifespan=lifespan)
 
 
-# Charger les informations sur les features
 with open("models/feature_info.json", "r") as f:
     feature_info = json.load(f)
 
-# Charger le nom du meilleur modèle
+
 with open("models/best_model_detail.json", "r") as f:
     best_model_info = json.load(f)
 
-# Charger le meilleur modèle
+
 best_model_name = best_model_info[
     "best_model_name"
 ]  # Récupérer le nom du meilleur modèle
@@ -125,6 +124,39 @@ class PredictionInput(BaseModel):
         ..., ge=1, le=5, description="Overall job satisfaction (1-5)"
     )
 
+    @field_validator(
+        "DailyRate",
+        "HourlyRate",
+        "MonthlyIncome",
+        "MonthlyRate",
+        "NumCompaniesWorked",
+        "TrainingTimesLastYear",
+        "YearsWithCurrManager",
+        "WorkExperience",
+    )
+    def validate_positive(cls, value):
+        if value < 0:
+            raise ValueError("Must be a positive value")
+        return value
+
+    @field_validator(
+        "Education",
+        "JobInvolvement",
+        "JobLevel",
+        "PerformanceRating",
+        "StockOptionLevel",
+    )
+    def validate_range(cls, value):
+        if not (0 <= value <= 5):
+            raise ValueError("Must be between 0 and 5")
+        return value
+
+    @field_validator("Age")
+    def validate_age(cls, value):
+        if not (18 <= value <= 67):
+            raise ValueError("Must be between 18 and 67")
+        return value
+
 
 class PredictionOutput(BaseModel):
     """Modèle Pydantic pour la sortie de prédiction."""
@@ -165,7 +197,6 @@ async def predict(
 ):
     """Faire une prédiction sur l'attrition des employés."""
 
-    # Convertir les entrées en valeurs numériques selon l'encodage
     features = []
     for feature_name in feature_info["feature_names"]:
         value = getattr(input_data, feature_name)
@@ -173,15 +204,10 @@ async def predict(
             value = feature_info["encoding_dict"][feature_name].get(value, value)
         features.append(float(value))
 
-    # Préparer les données pour la prédiction
     features_array = np.array(features).reshape(1, -1)
 
-    # Faire la prédiction avec le meilleur modèle
-    prediction_proba = best_model.predict_proba(features_array)[0][
-        1
-    ]  # Assurez-vous que cela correspond à votre modèle
+    prediction_proba = best_model.predict_proba(features_array)[0][1]
 
-    # Interpréter la prédiction
     if prediction_proba < 0.3:
         risk = "Faible risque de départ"
     elif prediction_proba < 0.7:
@@ -189,11 +215,10 @@ async def predict(
     else:
         risk = "Risque élevé de départ"
 
-        # Log des métriques avec Prometheus et MLflow
-    PREDICTION_COUNTER.labels(model=best_model_name, risk_level=risk).inc()
+    # Log des métriques avec Prometheus et MLflow
+    # PREDICTION_COUNTER.labels(model=best_model_name, risk_level=risk).inc()
 
-    # Log de la prédiction dans MLflow (assurez-vous que mlflow est configuré)
-    mlflow.log_metric(f"{best_model_name}_prediction", prediction_proba)
+    # mlflow.log_metric(f"{best_model_name}_prediction", prediction_proba)
 
     logger.info(
         f"Prediction output: Model={best_model_name}, Probability={prediction_proba}, Risk Level={risk}"

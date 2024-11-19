@@ -4,3 +4,5 @@ venv
 tmp/
 mlruns/
 mlartifacts/
+venv2
+venv3

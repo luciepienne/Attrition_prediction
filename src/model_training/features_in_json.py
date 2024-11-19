@@ -8,7 +8,6 @@ def save_feature_info(
 ):
     """Sauvegarder les informations sur les features dans un fichier JSON."""
 
-    # Créer un dictionnaire avec les informations des features
     feature_info = {
         "feature_names": feature_names,
         "feature_types": {name: str(dtype) for name, dtype in feature_types.items()},
@@ -18,7 +17,6 @@ def save_feature_info(
         },
     }
 
-    # Fonction pour rendre les objets compatibles avec JSON
     def convert_to_json_serializable(obj):
         if isinstance(obj, np.integer):
             return int(obj)
@@ -29,7 +27,6 @@ def save_feature_info(
         else:
             return obj
 
-    # Écrire le dictionnaire dans un fichier JSON
     with open(output_file, "w") as f:
         json.dump(feature_info, f, indent=2, default=convert_to_json_serializable)
 
