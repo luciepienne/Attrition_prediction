@@ -25,6 +25,7 @@ jobs:
           pytest tests/
 
   build-and-push:
+      needs: tests
       runs-on: ubuntu-latest
       steps:
       - uses: actions/checkout@v2
@@ -50,6 +51,26 @@ jobs:
           file: Dockerfile.streamlit
           push: true
           tags: luciepienne/attrition-streamlit:latest
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Simulated Deployment
+        run: |
+          echo "Deployment simulation started"
+          echo "Deploying FastAPI service..."
+          sleep 2
+          echo "FastAPI service deployed successfully"
+          echo "Deploying Streamlit service..."
+          sleep 2
+          echo "Streamlit service deployed successfully"
+          echo "Deployment simulation completed"
+
+      - name: Deployment Status
+        run: echo "Deployment completed successfully!"
+  
+
 
   # deploy:
   #   needs: build-and-push
