@@ -103,6 +103,16 @@ def update_model_history(model_name, accuracy):
         json.dump(history, history_file)
 
 
+def remove_old_model_file(model_name):
+    """
+    Remove the old model file if it exists.
+    """
+    for filename in os.listdir("models"):
+        if filename.startswith("best_model_") and filename.endswith(".pkl"):
+            if filename != f"best_model_{model_name}.pkl":
+                os.remove(os.path.join("models", filename))
+                logger.info(f"Removed old model file: {filename}")
+
 def load_previous_best_model():
     """
     Load the test accuracy and name of the previously best model.
@@ -136,14 +146,14 @@ models = {
         metric="minkowski",
     ),
     "Random Forest": RandomForestClassifier(
-        n_estimators=20, max_depth=100, max_features="sqrt", random_state=10
+        n_estimators=50, max_depth=100, max_features="sqrt", random_state=10
     ),
     "XGBoost": XGBClassifier(
         objective="binary:logistic",
         learning_rate=0.1,
         n_estimators=500,
-        max_depth=3,
-        random_state=82,
+        max_depth=6,
+        random_state=100,
     ),
     "Logistic Regression": LogisticRegression(),
 }
@@ -179,6 +189,8 @@ if best_accuracy > previous_best_accuracy:
         "test_accuracy": best_accuracy,
         "hyperparameters": best_model.get_params(),
     }
+
+    remove_old_model_file(best_model_name)
 
     with open("models/best_model_detail.json", "w", encoding="utf-8") as json_file:
         json.dump(best_model_details, json_file, indent=2)

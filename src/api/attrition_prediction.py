@@ -6,9 +6,7 @@ import os
 import requests
 import streamlit as st
 
-# API_URL = "http://localhost:8001"
-
-API_URL = os.getenv("FASTAPI_URL", "http://fastapi:8001")
+API_URL = "http://localhost:8001"
 
 
 def get_token(username: str, password: str) -> str:

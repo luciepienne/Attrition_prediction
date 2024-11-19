@@ -51,19 +51,19 @@ jobs:
           push: true
           tags: luciepienne/attrition-streamlit:latest
 
-  deploy:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install Railway CLI
-        run: npm i -g @railway/cli@latest
+  # deploy:
+  #   needs: build-and-push
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Install Railway CLI
+  #       run: npm i -g @railway/cli@latest
 
-      - name: Deploy FastAPI Service
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: railway up --service fastapi-service
+  #     - name: Deploy FastAPI Service
+  #       env:
+  #         RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+  #       run: railway up --service fastapi-service
 
-      - name: Deploy Streamlit Service
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: railway up --service streamlit-service
+  #     - name: Deploy Streamlit Service
+  #       env:
+  #         RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+  #       run: railway up --service streamlit-service

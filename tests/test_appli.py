@@ -14,7 +14,7 @@ from src.api.attrition_prediction import get_token
 class MockClient:
     """Mock client for simulating API requests."""
 
-    def post(self, url, data=None, headers=None):
+    def post(self, url, data=None, headers=None, **kwargs):
         """Simulate a POST request."""
         if (
             url == "http://localhost:8001/token"
@@ -24,7 +24,7 @@ class MockClient:
             return MockResponse(
                 200, {"access_token": "mock_token", "token_type": "bearer"}
             )
-        return MockResponse(400, {"detail": "Invalid credentials"})
+        return MockResponse(401, {"detail": "Invalid credentials"})
 
 
 class MockResponse:
@@ -38,6 +38,11 @@ class MockResponse:
     def json(self):
         """Return the JSON data of the response."""
         return self.json_data
+
+    def raise_for_status(self):
+        """Raise an HTTPError if the status code is 4xx or 5xx."""
+        if 400 <= self.status_code < 600:
+            raise requests.HTTPError(f"HTTP error: {self.status_code}")
 
 
 def test_login_success(monkeypatch):
