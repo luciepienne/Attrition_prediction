@@ -125,7 +125,7 @@ Lancer MLFLOW :
 `mlflow ui --port 5000`
 
 Lancer l'API FastAPI :
-`python src.api.app.py`
+`python src/api/app.py`
 
 Lancer l'application Streamlit :
 Ouvrez un autre terminal et exécutez :

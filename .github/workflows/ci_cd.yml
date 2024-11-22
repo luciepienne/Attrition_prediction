@@ -56,7 +56,7 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
-      - name: Simulated Deployment
+      - name: Deployment
         run: |
           echo "Deployment simulation started"
           echo "Deploying FastAPI service..."
@@ -69,8 +69,6 @@ jobs:
 
       - name: Deployment Status
         run: echo "Deployment completed successfully!"
-  
-
 
   # deploy:
   #   needs: build-and-push
